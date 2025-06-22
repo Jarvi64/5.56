@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyper-Velocity KPI Gauge</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --card-bg-color: #ffffff;
+            --text-color: #333333;
+            --accent-color: #d9534f;
+            --crosshair-color: rgba(0, 0, 0, 0.4);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --title-font: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+            --body-font: 'Roboto', 'Segoe UI', Arial, sans-serif;
+        }
+        body {
+            font-family: var(--body-font);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .kpi-card {
+            background: var(--card-bg-color);
+            border-radius: 15px;
+            padding: 25px 30px;
+            width: 340px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            overflow: hidden;
+        }
+        .kpi-title {
+            font-family: var(--title-font);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #111;
+            margin: 0 0 10px 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .kpi-description {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: -5px;
+            margin-bottom: 20px;
+        }
+        .gauge-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 2 / 1;
+            margin-bottom: 5px;
+        }
+        .gauge-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+        .gauge-arc-background {
+            fill: none;
+            stroke: #e0e0e0;
+            stroke-width: 2;
+        }
+        #gauge-fill-path {
+            fill: none;
+            stroke: url(#thrustGradient);
+            stroke-width: 16;
+            stroke-linecap: round;
+            filter: url(#thrustFilter) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+        .crosshair-line {
+            stroke: var(--crosshair-color);
+            stroke-width: 1.5;
+        }
+        .gauge-value {
+            font-family: var(--title-font);
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1d1d1d;
+        }
+        .gauge-value .unit {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin-left: 5px;
+        }
+        #cartridge-indicator {
+            transform-origin: 100px 100px;
+            transition: transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="kpi-card">
+        <h2 class="kpi-title">Hyper-Velocity Gauge</h2>
+        <p class="kpi-description">Kinetic energy output</p>
+        <div class="gauge-container">
+            <svg class="gauge-svg" viewBox="0 0 200 110">
+                <defs>
+                    <filter id="thrustFilter">
+                        <feTurbulence type="turbulence" baseFrequency="0.05 0.1" numOctaves="2" result="turbulence">
+                            <animate attributeName="baseFrequency" dur="0.8s" values="0.05 0.1; 0.08 0.15; 0.05 0.1" repeatCount="indefinite" />
+                        </feTurbulence>
+                        <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="10" />
+                    </filter>
+                    <linearGradient id="thrustGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#fff3a3" /><stop offset="60%" stop-color="#ff9e2c" /><stop offset="100%" stop-color="#e23c00" />
+                    </linearGradient>
+                    <linearGradient id="brassGradient" gradientTransform="rotate(90)">
+                        <stop offset="0%" stop-color="#d2ac47" /><stop offset="50%" stop-color="#f7ef8a" /><stop offset="100%" stop-color="#ae8625" />
+                    </linearGradient>
+                    <linearGradient id="bulletGradient" gradientTransform="rotate(90)">
+                        <stop offset="0%" stop-color="#a16b47" /><stop offset="50%" stop-color="#e6c2a8" /><stop offset="100%" stop-color="#8b5a3c" />
+                    </linearGradient>
+                    <linearGradient id="highlightGradient" gradientTransform="rotate(90)">
+                        <stop offset="0%" stop-color="rgba(255,255,255,0.8)" /><stop offset="100%" stop-color="rgba(255,255,255,0)" />
+                    </linearGradient>
+                </defs>
+                <g class="background">
+                    <path class="gauge-arc-background" d="M 10 100 A 90 90 0 0 1 190 100" />
+                    <line class="crosshair-line" x1="10" y1="100" x2="190" y2="100" /><line class="crosshair-line" x1="100" y1="100" x2="100" y2="10" />
+                    <circle cx="100" cy="100" r="10" fill="none" stroke="var(--crosshair-color)" stroke-width="1.5"/>
+                </g>
+                <g><path id="gauge-fill-path" d="M 10 100 A 90 90 0 0 1 190 100" /></g>
+                <g id="cartridge-indicator">
+                    <g class="casing">
+                        <path d="M95,102 L95,100 L96,100 L96,55 L97.5,50 L98.5,44 L101.5,44 L102.5,50 L104,55 L104,100 L105,100 L105,102 Z" fill="#9e7a2b" />
+                        <path d="M96,100 L96,55 L97.5,50 L98.5,44 L101.5,44 L102.5,50 L104,55 L104,100 Z" fill="url(#brassGradient)" stroke="#6e551a" stroke-width="0.3" />
+                        <path d="M97,95 L97,56 L98,51 L98.7,45 L100,45 L100,95Z" fill="url(#highlightGradient)" opacity="0.8" />
+                        <circle cx="100" cy="101" r="3.5" fill="#b08c3a" stroke="#6e551a" stroke-width="0.5"/>
+                    </g>
+                    <g class="bullet">
+                        <path d="M98.5,44.5 L99,32 C99.5,25 100.5,25 101,32 L101.5,44.5 Z" fill="url(#bulletGradient)" stroke="#523a28" stroke-width="0.3" />
+                        <path d="M99,44 L99.5,33 C99.7,28 100,28 100.2,33 L100.5,44 Z" fill="url(#highlightGradient)" opacity="0.9" />
+                        <rect x="98.5" y="38" width="3" height="1" fill="rgba(0,0,0,0.2)" />
+                    </g>
+                </g>
+            </svg>
+        </div>
+        <div class="gauge-value"><span id="value-text">0.0</span><span class="unit">%</span></div>
+    </div>
+
+    <script>
+        // Use a setTimeout to ensure the browser has rendered the SVG
+        // before we try to measure it. This prevents timing issues on re-render.
+        setTimeout(function() {
+            
+            // --- CONFIGURATION ---
+            // This value will be injected by your Power BI DAX measure.
+            const gaugeValue = 0; // DAX will replace this line.
+
+            // --- GAUGE ELEMENTS ---
+            const cartridgeIndicator = document.getElementById('cartridge-indicator');
+            const valueText = document.getElementById('value-text');
+            const gaugeFillPath = document.getElementById('gauge-fill-path');
+            
+            // --- GAUGE CONSTANTS ---
+            const GAUGE_MIN_VAL = 0;
+            const GAUGE_MAX_VAL = 100;
+            const ANGLE_MIN = -90;
+            const ANGLE_MAX = 90;
+
+            // Simple check to make sure the script doesn't error if elements are missing
+            if (!cartridgeIndicator || !valueText || !gaugeFillPath) {
+                console.error('Gauge elements not found! Halting script.');
+                return; 
+            }
+            
+            // --- INITIAL SETUP ---
+            const pathLength = gaugeFillPath.getTotalLength();
+            gaugeFillPath.style.strokeDasharray = pathLength;
+            gaugeFillPath.style.strokeDashoffset = pathLength;
+
+            // --- FUNCTIONS ---
+            function mapValueToRange(value, inMin, inMax, outMin, outMax) {
+                return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+            }
+
+            function updateGauge(value) {
+                // Ensure value is a number, default to 0 if not.
+                const numericValue = Number(value) || 0;
+                const clampedValue = Math.max(GAUGE_MIN_VAL, Math.min(numericValue, GAUGE_MAX_VAL));
+
+                const angle = mapValueToRange(clampedValue, GAUGE_MIN_VAL, GAUGE_MAX_VAL, ANGLE_MIN, ANGLE_MAX);
+                cartridgeIndicator.style.transform = `rotate(${angle}deg)`;
+                
+                const fillPercentage = clampedValue / GAUGE_MAX_VAL;
+                const offset = pathLength * (1 - fillPercentage);
+                gaugeFillPath.style.strokeDashoffset = offset;
+                
+                valueText.textContent = clampedValue.toFixed(1);
+            }
+
+            // --- INITIALIZE GAUGE ---
+            updateGauge(gaugeValue);
+
+        }, 0); // The 0ms timeout is the key!
+    </script>
+
+</body>
+</html>
