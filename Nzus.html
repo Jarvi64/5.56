@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Shortage Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .shortage { color: #dc3545; font-weight: bold; }
+        .no-shortage { color: #198754; }
+        .main-container { max-width: 1200px; }
+        .header-section { background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .result-section { margin-top: 30px; }
+        
+        /* SFG styling */
+        .sfg-row { 
+            background-color: #fff3cd !important; 
+            border-left: 4px solid #ffc107;
+        }
+        
+        /* FG styling */
+        .fg-row { 
+            background-color: #d1ecf1 !important; 
+            font-weight: bold; 
+            border-left: 4px solid #0dcaf0;
+        }
+        
+        /* Tree structure styling */
+        .tree-row {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .tree-toggle {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            border-radius: 3px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .tree-toggle:hover {
+            background-color: #e9ecef;
+        }
+        
+        .tree-toggle.expanded {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        
+        .child-row {
+            display: none;
+        }
+        
+        .child-row.show {
+            display: table-row;
+        }
+        
+        .child-row td:first-child {
+            padding-left: 40px;
+            position: relative;
+        }
+        
+        .child-row td:first-child::before {
+            content: '';
+            position: absolute;
+            left: 25px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: #dee2e6;
+        }
+        
+        .child-row td:first-child::after {
+            content: '';
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            width: 15px;
+            height: 1px;
+            background-color: #dee2e6;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #aaa;
+            background-color: #f8f9fa;
+        }
+        
+        .level-info {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        
+        .expand-all-btn {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container main-container my-4">
+        <div class="header-section">
+            <h1 class="text-center mb-4">Material Shortage Calculator</h1>
+            
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="stockFile" class="form-label">Upload Stock Data:</label>
+                    <div class="upload-area" id="uploadArea">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-file-earmark-excel" viewBox="0 0 16 16">
+                          <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l-2.233 2.68a.5.5 0 0 0 .768.64L8 10.781l2.116 2.54a.5.5 0 0 0 .768-.641L8.651 10l2.233-2.68a.5.5 0 0 0-.768-.64L8 9.219l-2.116-2.54z"/>
+                          <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                        </svg>
+                        <p class="mt-2 mb-0">Drop Excel file here or click to browse</p>
+                        <input class="d-none" type="file" id="stockFile" accept=".xlsx, .xls">
+                    </div>
+                    <div class="alert alert-info p-2">
+                        <strong>Excel Format:</strong>
+                        <ul class="mb-0 ps-3">
+                            <li>Column A: MaterialNumber</li>
+                            <li>Column B: StockQuantity</li>
+                            <li>First row can be header (optional)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <label for="modelSelect" class="form-label">Select Model:</label>
+                    <select class="form-select" id="modelSelect">
+                        <option value="FG-AR15">AR-15 Rifle</option>
+                        <option value="FG-PISTOL9">9mm Pistol</option>
+                        <option value="FG-SHOTGUN">Tactical Shotgun</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label for="quantityInput" class="form-label">Production Quantity:</label>
+                    <input type="number" class="form-control" id="quantityInput" value="1000" min="1" max="100000">
+                    <input type="range" class="form-range mt-2" id="quantitySlider" min="1" max="10000" value="1000">
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12 text-center">
+                    <button class="btn btn-primary" id="calculateBtn">Calculate Shortages</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="stockSummary" class="alert alert-info d-none">
+            <!-- Stock summary will be displayed here -->
+        </div>
+        
+        <div class="result-section d-none" id="resultsContainer">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Material Shortage Report</h3>
+                <div class="expand-all-btn">
+                    <button class="btn btn-outline-secondary btn-sm" id="expandAllBtn">Expand All</button>
+                    <button class="btn btn-outline-secondary btn-sm" id="collapseAllBtn">Collapse All</button>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning p-2">
+                <strong>Legend:</strong>
+                <span class="badge bg-info ms-2">FG</span> Finished Goods
+                <span class="badge bg-warning text-dark ms-2">SFG</span> Semi-Finished Goods
+                <span class="badge bg-secondary ms-2">RM</span> Raw Materials
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Gross Requirement</th>
+                            <th>Available Stock</th>
+                            <th>Net Shortage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTable">
+                        <!-- Results will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The BOM data - SIMPLIFIED! No level needed
+        const bomData = [
+            { parent: "FG-AR15", component: "SFG-UPPER", qtyPerParent: 1 },
+            { parent: "FG-AR15", component: "SFG-LOWER", qtyPerParent: 1 },
+            { parent: "FG-AR15", component: "RM-STOCK", qtyPerParent: 1 },
+            { parent: "SFG-UPPER", component: "SFG-BCG", qtyPerParent: 1 },
+            { parent: "SFG-UPPER", component: "RM-BARREL", qtyPerParent: 1 },
+            { parent: "SFG-LOWER", component: "RM-TRIGGER", qtyPerParent: 1 },
+            { parent: "SFG-BCG", component: "RM-BOLT", qtyPerParent: 1 },
+            { parent: "SFG-BCG", component: "RM-FPIN", qtyPerParent: 1 },
+            
+            // Add 9mm Pistol BOM
+            { parent: "FG-PISTOL9", component: "SFG-SLIDE", qtyPerParent: 1 },
+            { parent: "FG-PISTOL9", component: "SFG-FRAME", qtyPerParent: 1 },
+            { parent: "SFG-SLIDE", component: "RM-BARREL9", qtyPerParent: 1 },
+            { parent: "SFG-SLIDE", component: "RM-SPRING", qtyPerParent: 1 },
+            { parent: "SFG-FRAME", component: "RM-TRIGGER9", qtyPerParent: 1 },
+            { parent: "SFG-FRAME", component: "RM-GRIP", qtyPerParent: 1 },
+            
+            // Add Shotgun BOM
+            { parent: "FG-SHOTGUN", component: "SFG-RECEIVER", qtyPerParent: 1 },
+            { parent: "FG-SHOTGUN", component: "RM-BARREL12", qtyPerParent: 1 },
+            { parent: "SFG-RECEIVER", component: "RM-TRIGGER12", qtyPerParent: 1 },
+            { parent: "SFG-RECEIVER", component: "RM-PUMP", qtyPerParent: 1 }
+        ];
+        
+        // Material master data with descriptions
+        const materialMaster = {
+            "FG-AR15": "AR-15 Rifle",
+            "FG-PISTOL9": "9mm Pistol",
+            "FG-SHOTGUN": "Tactical Shotgun",
+            "SFG-UPPER": "Upper Receiver Assembly",
+            "SFG-LOWER": "Lower Receiver Assembly",
+            "RM-STOCK": "Buttstock",
+            "SFG-BCG": "Bolt Carrier Group",
+            "RM-BARREL": "Barrel",
+            "RM-TRIGGER": "Trigger Assembly",
+            "RM-BOLT": "Bolt",
+            "RM-FPIN": "Firing Pin",
+            "SFG-SLIDE": "Slide Assembly",
+            "SFG-FRAME": "Frame Assembly",
+            "RM-BARREL9": "9mm Barrel",
+            "RM-SPRING": "Recoil Spring",
+            "RM-TRIGGER9": "Trigger Group",
+            "RM-GRIP": "Grip",
+            "SFG-RECEIVER": "Receiver Assembly",
+            "RM-BARREL12": "12 Gauge Barrel",
+            "RM-TRIGGER12": "Trigger Group",
+            "RM-PUMP": "Pump Action Assembly"
+        };
+        
+        // Default stock levels if no file is uploaded
+        let stockData = {
+            "SFG-UPPER": 200,
+            "SFG-LOWER": 150,
+            "RM-STOCK": 500,
+            "SFG-BCG": 100,  // Reduced to create shortage
+            "RM-BARREL": 400,
+            "RM-TRIGGER": 600,
+            "RM-BOLT": 50,   // Reduced to create shortage
+            "RM-FPIN": 80,   // Reduced to create shortage
+            "SFG-SLIDE": 100,
+            "SFG-FRAME": 120,
+            "RM-BARREL9": 200,
+            "RM-SPRING": 300,
+            "RM-TRIGGER9": 250,
+            "RM-GRIP": 400,
+            "SFG-RECEIVER": 80,
+            "RM-BARREL12": 100,
+            "RM-TRIGGER12": 150,
+            "RM-PUMP": 90
+        };
+        
+        // Build parent-child relationships for BOM explosion
+        const childComponents = {};
+        bomData.forEach(row => {
+            if (!childComponents[row.parent]) {
+                childComponents[row.parent] = [];
+            }
+            childComponents[row.parent].push({
+                component: row.component,
+                qtyPerParent: row.qtyPerParent
+            });
+        });
+        
+        // Helper function to get material type
+        function getMaterialType(material) {
+            if (material.startsWith('FG-')) return 'FG';
+            if (material.startsWith('SFG-')) return 'SFG';
+            if (material.startsWith('RM-')) return 'RM';
+            return 'Unknown';
+        }
+        
+        // Connect input and slider
+        const quantityInput = document.getElementById('quantityInput');
+        const quantitySlider = document.getElementById('quantitySlider');
+        
+        quantityInput.addEventListener('input', () => {
+            quantitySlider.value = quantityInput.value;
+        });
+        
+        quantitySlider.addEventListener('input', () => {
+            quantityInput.value = quantitySlider.value;
+        });
+        
+        // Handle drag and drop file upload
+        const uploadArea = document.getElementById('uploadArea');
+        const stockFileInput = document.getElementById('stockFile');
+        
+        uploadArea.addEventListener('click', () => {
+            stockFileInput.click();
+        });
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('bg-light');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('bg-light');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('bg-light');
+            
+            if (e.dataTransfer.files.length) {
+                stockFileInput.files = e.dataTransfer.files;
+                handleFileUpload(e.dataTransfer.files[0]);
+            }
+        });
+        
+        stockFileInput.addEventListener('change', function(e) {
+            if (e.target.files.length) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+        
+        function handleFileUpload(file) {
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: ['material', 'quantity'] });
+                    
+                    // Check if first row is a header
+                    const startRow = typeof jsonData[0].material === 'string' && 
+                                    (jsonData[0].material.toLowerCase().includes('material') || 
+                                     jsonData[0].material.toLowerCase().includes('part')) ? 1 : 0;
+                    
+                    // Clear existing stock data
+                    stockData = {};
+                    
+                    // Parse stock data
+                    for (let i = startRow; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row.material && !isNaN(row.quantity)) {
+                            stockData[row.material] = parseInt(row.quantity);
+                        }
+                    }
+                    
+                    // Show stock summary
+                    showStockSummary();
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+        
+        function showStockSummary() {
+            const stockSummary = document.getElementById('stockSummary');
+            stockSummary.classList.remove('d-none');
+            
+            const numItems = Object.keys(stockData).length;
+            stockSummary.innerHTML = `<strong>Stock data loaded:</strong> ${numItems} materials found`;
+        }
+        
+        // Calculate button click handler
+        document.getElementById('calculateBtn').addEventListener('click', function() {
+            calculateShortages();
+        });
+        
+        function calculateShortages() {
+            const selectedModel = document.getElementById('modelSelect').value;
+            const quantity = parseInt(document.getElementById('quantityInput').value);
+            
+            // Make sure the selected model has a stock entry (default 0)
+            if (!stockData[selectedModel]) {
+                stockData[selectedModel] = 0;
+            }
+            
+            // Initialize the requirements and build tree structure
+            const requirements = {};
+            const hierarchyData = {};
+            
+            // Recursively calculate requirements and build hierarchy
+            function calculateRequirements(material, quantity, level = 1, path = new Set()) {
+                // Add to requirements
+                if (requirements[material]) {
+                    requirements[material] += quantity;
+                } else {
+                    requirements[material] = quantity;
+                }
+                
+                // Store hierarchy data
+                if (!hierarchyData[material]) {
+                    hierarchyData[material] = {
+                        level: level,
+                        children: [],
+                        parent: null
+                    };
+                }
+                
+                // Check if we have any stock to offset the requirement
+                const availableStock = stockData[material] || 0;
+                const netRequirement = Math.max(0, quantity - availableStock);
+                
+                // If there's a shortage and this material has components, explode to next level
+                if (netRequirement > 0 && childComponents[material]) {
+                    const newPath = new Set(path);
+                    newPath.add(material);
+                    
+                    childComponents[material].forEach(child => {
+                        if (newPath.has(child.component)) {
+                            console.error(`Circular reference detected: ${material} -> ${child.component}`);
+                            return;
+                        }
+                        
+                        const componentQuantity = netRequirement * child.qtyPerParent;
+                        
+                        // Add to hierarchy
+                        hierarchyData[material].children.push({
+                            component: child.component,
+                            quantity: componentQuantity,
+                            qtyPerParent: child.qtyPerParent
+                        });
+                        
+                        calculateRequirements(child.component, componentQuantity, level + 1, newPath);
+                        
+                        // Set parent reference
+                        if (!hierarchyData[child.component]) {
+                            hierarchyData[child.component] = {
+                                level: level + 1,
+                                children: [],
+                                parent: material
+                            };
+                        }
+                        hierarchyData[child.component].parent = material;
+                    });
+                }
+            }
+            
+            // Start the calculation with the selected model
+            calculateRequirements(selectedModel, quantity);
+            
+            // Generate hierarchical results table
+            displayHierarchicalResults(requirements, hierarchyData, selectedModel);
+        }
+        
+        function displayHierarchicalResults(requirements, hierarchyData, rootMaterial) {
+            const resultsTable = document.getElementById('resultsTable');
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsTable.innerHTML = '';
+            resultsContainer.classList.remove('d-none');
+            
+            // Build the hierarchical structure starting from root
+            function buildHierarchy(material, parentId = null) {
+                const grossRequirement = requirements[material] || 0;
+                const stock = stockData[material] || 0;
+                const shortage = Math.max(0, grossRequirement - stock);
+                const materialType = getMaterialType(material);
+                const hasChildren = hierarchyData[material] && hierarchyData[material].children.length > 0;
+                const hasShortage = shortage > 0;
+                
+                
+	// Create the row
+	                const row = document.createElement('tr');
+	                row.id = `row-${material}`;
+	                
+	                // Add appropriate classes
+	                if (materialType === 'FG') {
+	                    row.classList.add('fg-row');
+	                } else if (materialType === 'SFG') {
+	                    row.classList.add('sfg-row');
+	                }
+	                
+	                if (parentId) {
+	                    row.classList.add('child-row');
+	                    row.setAttribute('data-parent', parentId);
+	                }
+	                
+	                if (hasChildren && hasShortage) {
+	                    row.classList.add('tree-row');
+	                }
+	                
+	                // Create toggle button for expandable rows
+	                let toggleButton = '';
+	                if (hasChildren && hasShortage) {
+	                    toggleButton = `<span class="tree-toggle" data-material="${material}">+</span>`;
+	                }
+	                
+	                row.innerHTML = `
+	                    <td>${toggleButton}${material}</td>
+	                    <td>${materialMaster[material] || ''}</td>
+	                    <td>
+	                        <span class="badge ${materialType === 'FG' ? 'bg-info' : materialType === 'SFG' ? 'bg-warning text-dark' : 'bg-secondary'}">${materialType}</span>
+	                    </td>
+	                    <td>${Math.round(grossRequirement).toLocaleString()}</td>
+	                    <td>${stock.toLocaleString()}</td>
+	                    <td class="${shortage > 0 ? 'shortage' : 'no-shortage'}">${Math.round(shortage).toLocaleString()}</td>
+	                `;
+	                
+	                resultsTable.appendChild(row);
+	                
+	                // Add click handler for toggle button
+	                if (hasChildren && hasShortage) {
+	                    const toggleBtn = row.querySelector('.tree-toggle');
+	                    toggleBtn.addEventListener('click', function(e) {
+	                        e.stopPropagation();
+	                        toggleChildren(material);
+	                    });
+	                }
+	                
+	                // Add children (initially hidden)
+	                if (hasChildren && hasShortage) {
+	                    hierarchyData[material].children.forEach(child => {
+	                        buildHierarchy(child.component, material);
+	                    });
+	                }
+	            }
+	            
+	            // Start building from root
+	            buildHierarchy(rootMaterial);
+	            
+	            // Add expand/collapse all functionality
+	            document.getElementById('expandAllBtn').addEventListener('click', expandAll);
+	            document.getElementById('collapseAllBtn').addEventListener('click', collapseAll);
+	        }
+	        
+	        function toggleChildren(material) {
+	            const childRows = document.querySelectorAll(`tr[data-parent="${material}"]`);
+	            const toggleBtn = document.querySelector(`[data-material="${material}"]`);
+	            const isExpanded = toggleBtn.textContent === '−';
+	            
+	            childRows.forEach(row => {
+	                if (isExpanded) {
+	                    row.classList.remove('show');
+	                    // Also collapse any expanded grandchildren
+	                    const grandchildRows = document.querySelectorAll(`tr[data-parent="${row.id.replace('row-', '')}"]`);
+	                    grandchildRows.forEach(grandRow => {
+	                        grandRow.classList.remove('show');
+	                    });
+	                } else {
+	                    row.classList.add('show');
+	                }
+	            });
+	            
+	            // Update toggle button
+	            toggleBtn.textContent = isExpanded ? '+' : '−';
+	            toggleBtn.classList.toggle('expanded', !isExpanded);
+	        }
+	        
+	        function expandAll() {
+	            const allToggleBtns = document.querySelectorAll('.tree-toggle');
+	            allToggleBtns.forEach(btn => {
+	                const material = btn.getAttribute('data-material');
+	                const childRows = document.querySelectorAll(`tr[data-parent="${material}"]`);
+	                childRows.forEach(row => {
+	                    row.classList.add('show');
+	                });
+	                btn.textContent = '−';
+	                btn.classList.add('expanded');
+	            });
+	        }
+	        
+	        function collapseAll() {
+	            const allToggleBtns = document.querySelectorAll('.tree-toggle');
+	            allToggleBtns.forEach(btn => {
+	                const material = btn.getAttribute('data-material');
+	                const childRows = document.querySelectorAll(`tr[data-parent="${material}"]`);
+	                childRows.forEach(row => {
+	                    row.classList.remove('show');
+	                });
+	                btn.textContent = '+';
+	                btn.classList.remove('expanded');
+	            });
+	        }
+	        
+	        // Initialize with stock summary
+	        showStockSummary();
+	    </script>
+	</body>
+	</html>
+
+
