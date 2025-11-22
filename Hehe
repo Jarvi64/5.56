@@ -1,77 +1,59 @@
-DELTAPL SVG Cashflow = 
-VAR _CurrentVal = [Delta PL Cashflow]
--- 1. Get the Max Absolute value in the current view to normalize bar lengths
-VAR _MaxVal = MAXX(ALLSELECTED('YourTable'), ABS([Delta PL Cashflow]))
--- 2. Calculate the percentage of the full width this bar should occupy
-VAR _PercentOfMax = IF(_MaxVal = 0, 0, DIVIDE(_CurrentVal, _MaxVal))
+SVG P&L Bar = 
+VAR _Actual = [Actual Cashflow]
+VAR _Budget = [Budgeted Cashflow]
+VAR _Delta = _Actual - _Budget
 
--- 3. Define Colors
-VAR _Color = IF(_CurrentVal >= 0, "#4CAF50", "#E53935") -- Green / Red
-VAR _BarHeight = 14
-VAR _CanvasWidth = 150
-VAR _CanvasHeight = 20
-VAR _Center = _CanvasWidth / 2
+-- 1. SCALING: Find the global max to ensure bars are proportionally correct across rows
+VAR _GlobalMax = MAXX(ALLSELECTED('YourTable'), MAX([Actual Cashflow], [Budgeted Cashflow]))
+VAR _ScaleFactor = IF(_GlobalMax = 0, 0, 100 / _GlobalMax) -- Scale to 100px height
 
--- 4. Calculate Coordinates for Diverging Bar
-VAR _BarWidth = ABS(_PercentOfMax) * (_CanvasWidth / 2) 
-VAR _X_Pos = IF(_CurrentVal >= 0, _Center, _Center - _BarWidth)
+-- 2. GEOMETRY CALCS
+VAR _CanvasHeight = 120 -- Allow room for top text
+VAR _BarMaxHeight = 80  -- The bars themselves occupy 80px max
+VAR _BarWidth = 50
 
--- 5. Format the Text (Adjust format string for M/B as needed)
-VAR _TextDisplay = FORMAT(_CurrentVal, "$#,0,,.0M") 
+-- Calculate heights based on scaling
+VAR _ActualHeight = _Actual * _ScaleFactor * (_BarMaxHeight / 100)
+VAR _BudgetHeight = _Budget * _ScaleFactor * (_BarMaxHeight / 100)
+VAR _DeltaHeight = ABS(_Delta) * _ScaleFactor * (_BarMaxHeight / 100)
 
--- 6. Construct SVG
-VAR _SVG = 
-    "data:image/svg+xml;utf8," & 
-    "<svg xmlns='http://www.w3.org/2000/svg' width='" & _CanvasWidth & "' height='" & _CanvasHeight & "'>" &
-        -- Background Guide Line (Center Axis)
-        "<line x1='" & _Center & "' y1='0' x2='" & _Center & "' y2='" & _CanvasHeight & "' style='stroke:#aaa;stroke-width:1' />" &
+-- Colors
+VAR _ColorActual = "#1F2E46" -- Dark Blue from image
+VAR _ColorBad = "#E53935"    -- Red
+VAR _ColorGood = "#4CAF50"   -- Green
+
+-- 3. BUILD THE SHAPES
+VAR _Shapes = 
+    IF(
+        _Delta < 0, 
+        -- CASE: BEHIND PLAN (Draw Blue, then Stack Red on top)
+        -- Blue Bar (Bottom)
+        "<rect x='10' y='" & (_CanvasHeight - _ActualHeight) & "' width='" & _BarWidth & "' height='" & _ActualHeight & "' fill='" & _ColorActual & "' />" &
+        -- Red Bar (Stacked on top)
+        "<rect x='10' y='" & (_CanvasHeight - _BudgetHeight) & "' width='" & _BarWidth & "' height='" & _DeltaHeight & "' fill='" & _ColorBad & "' stroke='white' stroke-width='0.5' />",
         
-        -- The Bar
-        "<rect x='" & _X_Pos & "' y='" & (_CanvasHeight - _BarHeight)/2 & "' width='" & _BarWidth & "' height='" & _BarHeight & "' fill='" & _Color & "' rx='2' />" &
-        
-        -- The Text Value (Overlaying or beside)
-        "<text x='" & IF(_CurrentVal >=0, _X_Pos + _BarWidth + 5, _X_Pos - 5) & "' y='15' " &
-        "text-anchor='" & IF(_CurrentVal >=0, "start", "end") & "' " &
-        "font-family='Segoe UI' font-size='11' fill='#333'>" & _TextDisplay & "</text>" &
-    "</svg>"
+        -- CASE: AHEAD OF PLAN (Draw Blue, add Green marker)
+        -- Blue Bar (Full Height)
+        "<rect x='10' y='" & (_CanvasHeight - _ActualHeight) & "' width='" & _BarWidth & "' height='" & _ActualHeight & "' fill='" & _ColorActual & "' />" &
+        -- Green Indicator (Line/Cap at the top)
+        "<rect x='10' y='" & (_CanvasHeight - _ActualHeight) & "' width='" & _BarWidth & "' height='3' fill='" & _ColorGood & "' />"
+    )
 
+-- 4. BUILD THE LABELS
+VAR _LabelActual = FORMAT(_Actual, "#0.0,,M") -- Format as Millions
+VAR _LabelDelta = IF(_Delta > 0, "+", "") & FORMAT(_Delta, "#0.0,,M")
+
+VAR _TextLabels = 
+    -- Label inside the Blue Bar (White)
+    "<text x='" & (10 + _BarWidth/2) & "' y='" & (_CanvasHeight - 5) & "' text-anchor='middle' fill='white' font-size='10' font-family='Segoe UI'>" & _LabelActual & "</text>" &
+    
+    -- Label for Delta (Floating above the stack)
+    "<text x='" & (10 + _BarWidth/2) & "' y='" & (_CanvasHeight - MAX(_ActualHeight, _BudgetHeight) - 5) & "' text-anchor='middle' fill='#333' font-size='10' font-family='Segoe UI' font-weight='bold'>" & _LabelDelta & "</text>"
+
+-- 5. FINAL SVG ASSEMBLY
 RETURN
-    IF(ISBLANK(_CurrentVal), BLANK(), _SVG)
-
-
-
-DELTAPL% SVG Cashflow = 
-VAR _CurrentVal = [Delta PL % Cashflow]
--- 1. Get Max % to scale bars properly
-VAR _MaxVal = MAXX(ALLSELECTED('YourTable'), ABS([Delta PL % Cashflow]))
-VAR _PercentOfMax = IF(_MaxVal = 0, 0, DIVIDE(_CurrentVal, _MaxVal))
-
--- 2. Define Colors and Dimensions
-VAR _Color = IF(_CurrentVal >= 0, "#4CAF50", "#E53935") 
-VAR _BarHeight = 14
-VAR _CanvasWidth = 150 -- Slightly wider to fit text
-VAR _CanvasHeight = 20
-VAR _Center = _CanvasWidth / 2
-
--- 3. Coordinates
-VAR _BarWidth = ABS(_PercentOfMax) * (_CanvasWidth / 2) 
-VAR _X_Pos = IF(_CurrentVal >= 0, _Center, _Center - _BarWidth)
-
--- 4. Format Text
-VAR _TextDisplay = FORMAT(_CurrentVal, "0.0%") 
-
--- 5. Construct SVG
-VAR _SVG = 
     "data:image/svg+xml;utf8," & 
-    "<svg xmlns='http://www.w3.org/2000/svg' width='" & _CanvasWidth & "' height='" & _CanvasHeight & "'>" &
-        "<line x1='" & _Center & "' y1='0' x2='" & _Center & "' y2='" & _CanvasHeight & "' style='stroke:#aaa;stroke-width:1' />" &
-        
-        "<rect x='" & _X_Pos & "' y='" & (_CanvasHeight - _BarHeight)/2 & "' width='" & _BarWidth & "' height='" & _BarHeight & "' fill='" & _Color & "' rx='2' />" &
-        
-        "<text x='" & IF(_CurrentVal >=0, _X_Pos + _BarWidth + 5, _X_Pos - 5) & "' y='15' " &
-        "text-anchor='" & IF(_CurrentVal >=0, "start", "end") & "' " &
-        "font-family='Segoe UI' font-size='11' fill='#333'>" & _TextDisplay & "</text>" &
+    "<svg xmlns='http://www.w3.org/2000/svg' width='70' height='" & _CanvasHeight & "'>" & 
+        _Shapes & 
+        _TextLabels & 
     "</svg>"
-
-RETURN
-    IF(ISBLANK(_CurrentVal), BLANK(), _SVG)
