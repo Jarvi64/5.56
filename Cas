@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylized Brass Cartridge Case</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f4f8; /* Lighter background to make the gold pop */
+            font-family: sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        svg {
+            max-height: 80vh;
+            width: auto;
+            /* A crisp shadow for the whole object */
+            filter: drop-shadow(5px 10px 10px rgba(0,0,0,0.2));
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Stylized Gold Gradient: Cleaner, smoother transition -->
+                <linearGradient id="cleanGold" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#b8860b" />  <!-- Dark Shadow Edge -->
+                    <stop offset="20%" stop-color="#daa520" /> <!-- Mid Gold -->
+                    <stop offset="40%" stop-color="#ffd700" /> <!-- Highlight -->
+                    <stop offset="60%" stop-color="#daa520" /> <!-- Mid Gold -->
+                    <stop offset="90%" stop-color="#8b6508" /> <!-- Dark Shadow Edge -->
+                </linearGradient>
+
+                <!-- Darker Gold for inner parts or recessed groove -->
+                <linearGradient id="darkGold" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#705000" />
+                    <stop offset="50%" stop-color="#a07510" />
+                    <stop offset="100%" stop-color="#503500" />
+                </linearGradient>
+
+                <!-- The "Hollow" inside gradient -->
+                <radialGradient id="hollowDark" cx="50%" cy="50%" r="50%">
+                    <stop offset="70%" stop-color="#000000" />
+                    <stop offset="100%" stop-color="#554422" />
+                </radialGradient>
+            </defs>
+
+            <!-- Group containing the case, rotated 45 degrees -->
+            <g transform="translate(200, 300) rotate(45) translate(-50, -250)">
+                
+                <!-- STROKE STYLE: Thick dark lines for illustrative look -->
+                <g stroke="#3e2b08" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+
+                    <!-- 1. RIM (Base) -->
+                    <path d="M 0,500 L 100,500 L 100,520 L 0,520 Z" fill="url(#cleanGold)" />
+                    
+                    <!-- 2. EXTRACTOR GROOVE (Recessed area) -->
+                    <rect x="5" y="480" width="90" height="20" fill="url(#darkGold)" />
+                    <!-- Groove Borders -->
+                    <line x1="0" y1="500" x2="5" y2="480" /> 
+                    <line x1="100" y1="500" x2="95" y2="480" />
+
+                    <!-- 3. MAIN BODY -->
+                    <!-- Tapering slightly from 95 to 95 (straight) or slightly inwards -->
+                    <path d="M 5,160 L 95,160 L 95,480 L 5,480 Z" fill="url(#cleanGold)" />
+
+                    <!-- 4. SHOULDER -->
+                    <path d="M 20,110 L 80,110 L 95,160 L 5,160 Z" fill="url(#cleanGold)" />
+
+                    <!-- 5. NECK -->
+                    <path d="M 20,10 L 80,10 L 80,110 L 20,110 Z" fill="url(#cleanGold)" />
+
+                    <!-- 6. MOUTH (Top Opening) -->
+                    <!-- Top rim surface -->
+                    <ellipse cx="50" cy="10" rx="30" ry="8" fill="#ffd700" />
+                    <!-- The hollow hole -->
+                    <ellipse cx="50" cy="10" rx="25" ry="5" fill="url(#hollowDark)" stroke="none" />
+                
+                </g>
+
+                <!-- HIGHLIGHTS (The "Shine") -->
+                <!-- Adding white shapes with opacity to create that "vector shine" look -->
+                <g fill="white" opacity="0.3">
+                    <!-- Body Highlight -->
+                    <rect x="35" y="160" width="10" height="320" />
+                    <!-- Neck Highlight -->
+                    <rect x="35" y="10" width="10" height="100" />
+                    <!-- Shoulder Highlight (Trapezoid) -->
+                    <path d="M 35,110 L 45,110 L 52,160 L 40,160 Z" />
+                    <!-- Rim Highlight -->
+                    <rect x="35" y="500" width="10" height="20" />
+                </g>
+
+                <!-- SECONDARY HIGHLIGHT (Thinner, sharper) -->
+                <g fill="white" opacity="0.6">
+                     <rect x="40" y="160" width="2" height="320" />
+                     <rect x="40" y="10" width="2" height="100" />
+                     <path d="M 40,110 L 42,110 L 44,160 L 42,160 Z" />
+                     <rect x="40" y="500" width="2" height="20" />
+                </g>
+
+            </g>
+        </svg>
+    </div>
+
+</body>
+</html>
+
