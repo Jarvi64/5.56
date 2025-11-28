@@ -1,59 +1,129 @@
-SVG P&L Bar = 
-VAR _Actual = [Actual Cashflow]
-VAR _Budget = [Budgeted Cashflow]
-VAR _Delta = _Actual - _Budget
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M80 Ammunition Manufacturing - Stage 1: The Cup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+        }
+        .svg-container {
+            background: radial-gradient(circle at center, #2a2a2a 0%, #111 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        h2 {
+            color: #e5e5e5;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
 
--- 1. SCALING: Find the global max to ensure bars are proportionally correct across rows
-VAR _GlobalMax = MAXX(ALLSELECTED('YourTable'), MAX([Actual Cashflow], [Budgeted Cashflow]))
-VAR _ScaleFactor = IF(_GlobalMax = 0, 0, 100 / _GlobalMax) -- Scale to 100px height
+<div class="svg-container">
+    <h2>Stage 1: The Brass Cup</h2>
+    <!-- M80 Ammo Cup SVG -->
+    <svg width="300" height="300" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <!-- Main Body Gradient (Metallic Cylinder effect) -->
+            <linearGradient id="brassBody" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#4f3810;stop-opacity:1" />
+                <stop offset="15%" style="stop-color:#b88a3b;stop-opacity:1" />
+                <stop offset="40%" style="stop-color:#fceea6;stop-opacity:1" /> <!-- Highlight -->
+                <stop offset="60%" style="stop-color:#d4a647;stop-opacity:1" />
+                <stop offset="85%" style="stop-color:#694712;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#3d2b0c;stop-opacity:1" />
+            </linearGradient>
 
--- 2. GEOMETRY CALCS
-VAR _CanvasHeight = 120 -- Allow room for top text
-VAR _BarMaxHeight = 80  -- The bars themselves occupy 80px max
-VAR _BarWidth = 50
+            <!-- Inner Shadow Gradient (Inside the cup) -->
+            <linearGradient id="innerShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#261905;stop-opacity:1" />
+                <stop offset="30%" style="stop-color:#594011;stop-opacity:1" />
+                <stop offset="70%" style="stop-color:#261905;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#1a1103;stop-opacity:1" />
+            </linearGradient>
+            
+            <!-- Rim Highlight (Cut surface) -->
+            <linearGradient id="rimGold" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#ffeec2;stop-opacity:1" />
+                <stop offset="50%" style="stop-color:#d4af37;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#8a6e1c;stop-opacity:1" />
+            </linearGradient>
 
--- Calculate heights based on scaling
-VAR _ActualHeight = _Actual * _ScaleFactor * (_BarMaxHeight / 100)
-VAR _BudgetHeight = _Budget * _ScaleFactor * (_BarMaxHeight / 100)
-VAR _DeltaHeight = ABS(_Delta) * _ScaleFactor * (_BarMaxHeight / 100)
+            <!-- Bottom Curve shading -->
+            <radialGradient id="bottomShade" cx="50%" cy="100%" r="80%" fx="50%" fy="100%">
+                <stop offset="0%" style="stop-color:rgba(0,0,0,0.2)" />
+                <stop offset="100%" style="stop-color:rgba(0,0,0,0)" />
+            </radialGradient>
+        </defs>
 
--- Colors
-VAR _ColorActual = "#1F2E46" -- Dark Blue from image
-VAR _ColorBad = "#E53935"    -- Red
-VAR _ColorGood = "#4CAF50"   -- Green
+        <!-- Group wrapper for centering -->
+        <g transform="translate(50, 40)">
+            
+            <!-- 1. The Cup Body (Cylinder with rounded bottom) -->
+            <!-- M80 cups are relatively short and thick before drawing -->
+            <path d="M 0,20 
+                     L 0,90 
+                     Q 0,115 50,115 
+                     Q 100,115 100,90 
+                     L 100,20 
+                     Z" 
+                  fill="url(#brassBody)" stroke="#3d2b0c" stroke-width="0.5"/>
 
--- 3. BUILD THE SHAPES
-VAR _Shapes = 
-    IF(
-        _Delta < 0, 
-        -- CASE: BEHIND PLAN (Draw Blue, then Stack Red on top)
-        -- Blue Bar (Bottom)
-        "<rect x='10' y='" & (_CanvasHeight - _ActualHeight) & "' width='" & _BarWidth & "' height='" & _ActualHeight & "' fill='" & _ColorActual & "' />" &
-        -- Red Bar (Stacked on top)
-        "<rect x='10' y='" & (_CanvasHeight - _BudgetHeight) & "' width='" & _BarWidth & "' height='" & _DeltaHeight & "' fill='" & _ColorBad & "' stroke='white' stroke-width='0.5' />",
+            <!-- 2. Bottom Edge Highlight/Reflection (Simulating the rounded base radius) -->
+            <path d="M 10,95 Q 50,110 90,95" 
+                  fill="none" 
+                  stroke="#b88a3b" 
+                  stroke-width="1" 
+                  opacity="0.6" />
+
+            <!-- 3. The Inside (Hollow part) -->
+            <!-- ellipse representing the back inner wall -->
+            <ellipse cx="50" cy="20" rx="42" ry="12" fill="url(#innerShadow)" />
+
+            <!-- 4. The Rim (Thickness of the material) -->
+            <!-- This consists of two ellipses: Outer rim and Inner rim, filled between -->
+            <path d="M 0,20 
+                     A 50,15 0 1,1 100,20 
+                     A 50,15 0 1,1 0,20 
+                     M 8,20 
+                     A 42,12 0 1,0 92,20 
+                     A 42,12 0 1,0 8,20 Z" 
+                  fill="url(#rimGold)" 
+                  fill-rule="evenodd"
+                  stroke="#fceea6" stroke-width="0.5" stroke-opacity="0.5" />
+
+            <!-- 5. Surface Imperfections / Scratches (for realism) -->
+            <path d="M 20,40 L 20,50" stroke="#8a6e1c" stroke-width="0.5" opacity="0.3" />
+            <path d="M 70,60 L 70,75" stroke="#8a6e1c" stroke-width="0.5" opacity="0.3" />
+            <path d="M 40,80 L 45,85" stroke="#ffeec2" stroke-width="0.5" opacity="0.4" />
+
+            <!-- 6. Specular Highlight (Vertical shine) -->
+            <rect x="35" y="25" width="10" height="70" fill="#fff" opacity="0.15" rx="5" filter="blur(2px)"/>
+        </g>
         
-        -- CASE: AHEAD OF PLAN (Draw Blue, add Green marker)
-        -- Blue Bar (Full Height)
-        "<rect x='10' y='" & (_CanvasHeight - _ActualHeight) & "' width='" & _BarWidth & "' height='" & _ActualHeight & "' fill='" & _ColorActual & "' />" &
-        -- Green Indicator (Line/Cap at the top)
-        "<rect x='10' y='" & (_CanvasHeight - _ActualHeight) & "' width='" & _BarWidth & "' height='3' fill='" & _ColorGood & "' />"
-    )
+        <!-- Simple Drop Shadow beneath the object -->
+        <ellipse cx="100" cy="160" rx="50" ry="5" fill="#000" opacity="0.4" filter="blur(4px)"/>
 
--- 4. BUILD THE LABELS
-VAR _LabelActual = FORMAT(_Actual, "#0.0,,M") -- Format as Millions
-VAR _LabelDelta = IF(_Delta > 0, "+", "") & FORMAT(_Delta, "#0.0,,M")
-
-VAR _TextLabels = 
-    -- Label inside the Blue Bar (White)
-    "<text x='" & (10 + _BarWidth/2) & "' y='" & (_CanvasHeight - 5) & "' text-anchor='middle' fill='white' font-size='10' font-family='Segoe UI'>" & _LabelActual & "</text>" &
+    </svg>
     
-    -- Label for Delta (Floating above the stack)
-    "<text x='" & (10 + _BarWidth/2) & "' y='" & (_CanvasHeight - MAX(_ActualHeight, _BudgetHeight) - 5) & "' text-anchor='middle' fill='#333' font-size='10' font-family='Segoe UI' font-weight='bold'>" & _LabelDelta & "</text>"
+    <div style="color: #888; font-size: 12px; margin-top: 10px;">
+        Cartridge Case Cup (Brass 70/30)
+    </div>
+</div>
 
--- 5. FINAL SVG ASSEMBLY
-RETURN
-    "data:image/svg+xml;utf8," & 
-    "<svg xmlns='http://www.w3.org/2000/svg' width='70' height='" & _CanvasHeight & "'>" & 
-        _Shapes & 
-        _TextLabels & 
-    "</svg>"
+</body>
+</html>
+
