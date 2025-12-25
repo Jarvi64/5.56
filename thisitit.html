@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Content Security Policy: Strict but allows fonts/icons from trusted CDNs -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+    <title>CV Screening Intelligence</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            /* Palette: Premium Modern Theme - Refined */
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eff6ff;
+
+            --secondary: #64748b;
+
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+
+            /* Status Colors (Vibrant) */
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+
+            /* Elevation */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-pop: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Layout --- */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            z-index: 30;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+        }
+
+        .brand svg {
+            color: var(--primary);
+            width: 24px;
+            height: 24px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0 1rem;
+            height: 36px;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            user-select: none;
+            position: relative;
+        }
+
+        .upload-input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 1px 2px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border-color: var(--border);
+            color: var(--text-main);
+            background: var(--surface);
+        }
+
+        .btn-outline:hover {
+            border-color: #cbd5e1;
+            background-color: var(--surface-hover);
+        }
+
+        .btn-icon {
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        /* --- Main Content --- */
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background: var(--background);
+        }
+
+        /* --- Sidebar --- */
+        aside {
+            width: 320px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+            z-index: 20;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.01);
+        }
+
+        .panel-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-section h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- Creative Status Widget (Inline Grid) --- */
+        .status-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .status-card {
+            position: relative;
+            padding: 0.75rem 0.25rem;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s;
+            cursor: default;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .status-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-content {
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+            width: 100%;
+        }
+
+        .status-val {
+            font-size: 1.35rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.1rem;
+        }
+
+        .status-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.85;
+        }
+
+        .status-select {
+            background: linear-gradient(145deg, #ecfdf5, #d1fae5);
+            color: #065f46;
+        }
+
+        .status-select .status-val {
+            color: #059669;
+        }
+
+        .status-border {
+            background: linear-gradient(145deg, #fffbeb, #fef3c7);
+            color: #92400e;
+        }
+
+        .status-border .status-val {
+            color: #d97706;
+        }
+
+        .status-reject {
+            background: linear-gradient(145deg, #fef2f2, #fee2e2);
+            color: #991b1b;
+        }
+
+        .status-reject .status-val {
+            color: #dc2626;
+        }
+
+
+        /* Sliders */
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .slider-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .slider-value {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            background-image: linear-gradient(var(--primary), var(--primary));
+            background-size: 50% 100%;
+            /* Default to 50% */
+            background-repeat: no-repeat;
+            border-radius: 99px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input[type="range"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            background-image: linear-gradient(var(--secondary), var(--secondary));
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 2px solid var(--primary);
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        /* Filters */
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-control {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.85rem;
+            background: var(--surface);
+            outline: none;
+            transition: all 0.2s;
+            color: var(--text-main);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* --- Data View --- */
+        .data-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--background);
+            position: relative;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        /* Toolbar */
+        .table-toolbar {
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: transparent;
+            min-height: 3.5rem;
+            flex-shrink: 0;
+            width: 100%;
+            position: relative;
+            z-index: 150;
+        }
+
+        .result-count {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-pop);
+            min-width: 220px;
+            z-index: 200;
+            padding: 0.5rem;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+            transform-origin: top right;
+            animation: scaleIn 0.1s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .column-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            user-select: none;
+            transition: background 0.1s;
+        }
+
+        .column-toggle:hover {
+            background: var(--surface-hover);
+        }
+
+        .table-wrapper {
+            flex: 1;
+            overflow: auto;
+            padding: 0 1.5rem;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Empty State */
+        .empty-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-muted);
+            background: var(--background);
+            z-index: 5;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1.5rem;
+            opacity: 0.4;
+            color: var(--primary);
+        }
+
+        .empty-state h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        /* Table */
+        table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            table-layout: fixed;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 0.875rem 1.25rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            /* Increased Z-Index for Robustness */
+            white-space: nowrap;
+            user-select: none;
+            box-shadow: 0 1px 0 var(--border);
+            /* Better border for sticky state */
+            position: relative;
+            position: -webkit-sticky;
+            /* Safari support */
+            position: sticky;
+        }
+
+        /* Ensure table header has background to cover scrolling content */
+        thead {
+            background: #f8fafc;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        th.sortable:hover {
+            background: #f1f5f9;
+            color: var(--primary);
+        }
+
+        th:first-child {
+            border-top-left-radius: var(--radius-xl);
+        }
+
+        th:last-child {
+            border-top-right-radius: var(--radius-xl);
+        }
+
+        /* Improved Resize Handle */
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 14px;
+            cursor: col-resize;
+            z-index: 110;
+            /* Above Header */
+            transform: translateX(50%);
+            display: flex;
+            justify-content: center;
+        }
+
+        .resize-handle::after {
+            content: '';
+            width: 2px;
+            height: 100%;
+            background-color: var(--primary);
+            opacity: 0;
+            transition: opacity 0.15s;
+            box-shadow: 0 0 4px rgba(79, 70, 229, 0.4);
+        }
+
+        th:hover .resize-handle::after,
+        .resize-handle.active::after {
+            opacity: 1;
+        }
+
+        td {
+            padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+            vertical-align: top;
+            color: var(--text-main);
+            background: var(--surface);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            /* Allow Wrap */
+            word-break: break-word;
+            /* Break long words */
+        }
+
+        td.cell-wrap {
+            white-space: normal;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-right: 0.25rem;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .badge-neutral {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .score-cell {
+            font-weight: 600;
+        }
+
+        .score-high {
+            color: #16a34a;
+        }
+
+        .score-mid {
+            color: #d97706;
+        }
+
+        .score-low {
+            color: #dc2626;
+        }
+
+        .score-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sparkline-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 20px;
+            width: 40px;
+        }
+
+        .sparkline-bar {
+            flex: 1;
+            background: #e2e8f0;
+            border-radius: 1px;
+            width: 6px;
+            transition: height 0.3s;
+        }
+
+        .spark-edu {
+            background: #6366f1;
+        }
+
+        .spark-dom {
+            background: #10b981;
+        }
+
+        .spark-exp {
+            background: #f59e0b;
+        }
+
+        .spark-req {
+            background: #ec4899;
+        }
+
+
+        .final-score {
+            font-family: 'Outfit', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: var(--radius-md);
+            background: #f8fafc;
+            display: inline-block;
+            min-width: 3ch;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        /* Custom Checkbox */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            background: var(--surface);
+            transition: all 0.2s;
+        }
+
+        .custom-checkbox:checked {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* --- Advanced Pagination --- */
+        .pagination-container {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--background);
+            border-top: 1px solid transparent;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .pagination-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .page-size-select {
+            padding: 0.375rem 2rem 0.375rem 0.75rem;
+            font-size: 0.85rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background-color: var(--surface);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+        }
+
+        .page-size-select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .pagination-right {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .btn-page {
+            min-width: 32px;
+            height: 32px;
+            padding: 0 0.5rem;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-page:hover:not(:disabled):not(.active) {
+            background: var(--surface-hover);
+            border-color: #cbd5e1;
+        }
+
+        .btn-page.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-page:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f1f5f9;
+        }
+
+        .dots {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: 0 0.25rem;
+        }
+
+        /* --- Kanban Board --- */
+        .kanban-board {
+            display: flex;
+            gap: 1.5rem;
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            height: 100%;
+            overflow-x: auto;
+        }
+
+        .kanban-col {
+            flex: 1;
+            min-width: 300px;
+            background: #f1f5f9;
+            border-radius: var(--radius-xl);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .kanban-col.drag-over {
+            background: #e2e8f0;
+            border-color: var(--primary);
+        }
+
+        .kanban-header {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kanban-count {
+            background: #cbd5e1;
+            color: var(--text-main);
+            border-radius: 99px;
+            padding: 0.1rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .kanban-cards {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            overflow-y: auto;
+            min-height: 100px;
+        }
+
+        .k-card {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .k-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .k-card {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            /* Ensure opacity is high for ghost image generation */
+            opacity: 1;
+            backface-visibility: hidden;
+        }
+
+        .k-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .k-card:active {
+            cursor: grabbing;
+        }
+
+        /* Dragging class to keep source visible or style it if needed */
+        .k-card.dragging {
+            opacity: 0.4;
+            /* Dim the source, but keep ghost clear? Browser handles ghost from pre-drag state */
+            border: 2px dashed var(--primary);
+        }
+
+        .k-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .k-name {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .k-role {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .k-score {
+            font-family: 'Outfit', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: var(--radius-md);
+            background: #f8fafc;
+            border: 1px solid var(--border);
+        }
+
+        .k-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-top: 0.75rem;
+        }
+
+        /* --- Profile Circles --- */
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: white;
+            flex-shrink: 0;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .name-cell-inner {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .contact-info span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- Modal --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.15s ease-out;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            width: 100%;
+            max-width: 960px;
+            max-height: 90vh;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-pop);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .modal-title-group {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .modal-title-group h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.125rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-close {
+            background: var(--surface-hover);
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-close:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 1.5rem 2rem;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem 2.5rem;
+            background: #fff;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #f8fafc;
+        }
+
+        .detail-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.075em;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            font-weight: 500;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">
+            <i data-lucide="layers"></i>
+            CV Screening Intelligence
+        </div>
+        <div class="actions">
+            <!-- Fixed Upload Button Style -->
+            <button class="btn btn-primary">
+                <i data-lucide="upload-cloud" width="16"></i>
+                Upload Report
+                <input type="file" id="fileInput" class="upload-input" accept=".xlsx, .xls">
+            </button>
+
+            <button class="btn btn-outline" onclick="exportToExcel()">
+                <i data-lucide="download" width="16"></i>
+                Export
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <aside>
+            <div class="panel-section">
+                <h3><i data-lucide="pie-chart"></i> Screening Overview</h3>
+
+                <!-- Creative Status Widget (Inline) -->
+                <div class="status-container">
+                    <div class="status-card status-select">
+                        <div class="status-content">
+                            <span class="status-val" id="count-shortlisted">0</span>
+                            <span class="status-label">Select</span>
+                        </div>
+                    </div>
+
+                    <div class="status-card status-border">
+                        <div class="status-content">
+                            <span class="status-val" id="count-borderline">0</span>
+                            <span class="status-label">Border</span>
+                        </div>
+                    </div>
+
+                    <div class="status-card status-reject">
+                        <div class="status-content">
+                            <span class="status-val" id="count-rejected">0</span>
+                            <span class="status-label">Reject</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3><i data-lucide="sliders"></i> Scoring Weights</h3>
+                <div class="slider-group">
+                    <div class="slider-item">
+                        <div class="slider-header">
+                            <span>Education</span>
+                            <span><span id="val-edu" class="slider-value">5</span> <span id="pct-edu"
+                                    class="weight-percent">(25%)</span></span>
+                        </div>
+                        <input type="range" id="weight-edu" min="0" max="10" value="5" step="1">
+                    </div>
+
+                    <div class="slider-item">
+                        <div class="slider-header">
+                            <span>Domain Fit</span>
+                            <span><span id="val-dom" class="slider-value">5</span> <span id="pct-dom"
+                                    class="weight-percent">(25%)</span></span>
+                        </div>
+                        <input type="range" id="weight-dom" min="0" max="10" value="5" step="1">
+                    </div>
+
+                    <div class="slider-item">
+                        <div class="slider-header">
+                            <span>Experience</span>
+                            <span><span id="val-exp" class="slider-value">5</span> <span id="pct-exp"
+                                    class="weight-percent">(25%)</span></span>
+                        </div>
+                        <input type="range" id="weight-exp" min="0" max="10" value="5" step="1">
+                    </div>
+
+                    <div class="slider-item">
+                        <div class="slider-header">
+                            <span>Skills/Reqs</span>
+                            <span><span id="val-req" class="slider-value">5</span> <span id="pct-req"
+                                    class="weight-percent">(25%)</span></span>
+                        </div>
+                        <input type="range" id="weight-req" min="0" max="10" value="5" step="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="margin-bottom:0;"><i data-lucide="filter"></i> Filters</h3>
+                    <button class="btn btn-outline" style="height:24px; font-size:0.75rem; padding:0 0.5rem;"
+                        onclick="clearFilters()">Clear All</button>
+                </div>
+                <div class="filter-group">
+                    <div class="input-group">
+                        <label>Search Candidate</label>
+                        <input type="text" id="search-text" class="form-control" placeholder="Name, Email or Skill...">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Min Experience (Years)</label>
+                        <input type="number" id="filter-exp" class="form-control" placeholder="e.g. 5">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Domain Match</label>
+                        <select id="filter-domain" class="form-control">
+                            <option value="all">All</option>
+                            <option value="true">Matched Only</option>
+                            <option value="false">Not Matched</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Status</label>
+                        <select id="filter-status" class="form-control">
+                            <option value="all">All</option>
+                            <option value="Shortlisted">Shortlisted (>70)</option>
+                            <option value="Borderline">Borderline (40-70)</option>
+                            <option value="Rejected">Rejected (&lt;40)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="data-view">
+            <!-- Toolbar -->
+            <div class="table-toolbar" style="display:none;" id="table-toolbar">
+                <div class="result-count" id="result-count">Showing 0 candidates</div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <div class="dropdown">
+                        <button class="btn btn-outline" id="view-toggle-btn" onclick="toggleViewMode()">
+                            <i data-lucide="layout-grid" width="14"></i> <span id="view-label">Board</span>
+                        </button>
+                    </div>
+                    <div class="dropdown" id="col-toggle-wrapper">
+                        <button class="btn btn-outline" id="col-toggle-btn">
+                            <i data-lucide="columns" width="14"></i> Columns
+                        </button>
+                        <div class="dropdown-menu" id="col-dropdown">
+                            <!-- Dynamic checkboxes -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="empty-state" class="empty-state">
+                <i data-lucide="file-spreadsheet"></i>
+                <h2>No Data Loaded</h2>
+                <!-- Overlay button -->
+                <button class="btn btn-primary" style="padding-left: 1.5rem; padding-right: 1.5rem;">
+                    Upload Excel File
+                    <input type="file" id="fileInputOverlay" class="upload-input" accept=".xlsx, .xls">
+                </button>
+            </div>
+
+            <div id="table-wrapper" class="table-wrapper" style="display: none;">
+                <table id="main-table">
+                    <thead id="table-head">
+                        <!-- Dynamic Headers -->
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Kanban View -->
+            <div id="kanban-view" class="kanban-board" style="display: none;">
+                <!-- Shortlisted Col -->
+                <div class="kanban-col" id="col-shortlisted" ondrop="drop(event, 'Shortlisted')"
+                    ondragover="allowDrop(event)" ondragleave="leaveDrop(event)">
+                    <div class="kanban-header">
+                        <span style="color:#10b981">Shortlisted</span>
+                        <span class="kanban-count" id="count-k-short">0</span>
+                    </div>
+                    <div class="kanban-cards" id="list-shortlisted"></div>
+                </div>
+
+                <!-- Borderline Col -->
+                <div class="kanban-col" id="col-borderline" ondrop="drop(event, 'Borderline')"
+                    ondragover="allowDrop(event)" ondragleave="leaveDrop(event)">
+                    <div class="kanban-header">
+                        <span style="color:#f59e0b">Borderline</span>
+                        <span class="kanban-count" id="count-k-border">0</span>
+                    </div>
+                    <div class="kanban-cards" id="list-borderline"></div>
+                </div>
+
+                <!-- Rejected Col -->
+                <div class="kanban-col" id="col-rejected" ondrop="drop(event, 'Rejected')" ondragover="allowDrop(event)"
+                    ondragleave="leaveDrop(event)">
+                    <div class="kanban-header">
+                        <span style="color:#ef4444">Rejected</span>
+                        <span class="kanban-count" id="count-k-reject">0</span>
+                    </div>
+                    <div class="kanban-cards" id="list-rejected"></div>
+                </div>
+            </div>
+
+            <!-- Advanced Pagination -->
+            <div id="pagination-container" class="pagination-container" style="display: none;">
+                <div class="pagination-left">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Rows per page:</span>
+                    <select id="rows-per-page" class="page-size-select" onchange="changePageSize(this.value)">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
+                <div class="pagination-right" id="pagination-controls">
+                    <!-- Dynamic Page Buttons -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /**
+         * Simple HTML sanitizer to prevent XSS.
+         * Escapes special characters from untrusted strings.
+         */
+        function sanitizeHTML(str) {
+            if (str === null || str === undefined) return '';
+            const s = String(str);
+            return s
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = String(name).trim().split(/\s+/);
+            if (parts.length === 0) return '?';
+            if (parts.length === 1) return parts[0].substring(0, 1).toUpperCase();
+            return (parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1)).toUpperCase();
+        }
+
+        function getAvatarGradient(name) {
+            const gradients = [
+                'linear-gradient(135deg, #6366f1, #a855f7)', // Blue/Purple
+                'linear-gradient(135deg, #f43f5e, #fb923c)', // Pink/Orange
+                'linear-gradient(135deg, #059669, #34d399)', // Green/Teal
+                'linear-gradient(135deg, #0ea5e9, #22d3ee)', // Sky/Cyan
+                'linear-gradient(135deg, #8b5cf6, #d946ef)', // Violet/Fuchsia
+                'linear-gradient(135deg, #f59e0b, #fbbf24)', // Amber/Yellow
+            ];
+            let hash = 0;
+            const n = String(name || '');
+            for (let i = 0; i < n.length; i++) {
+                hash = n.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % gradients.length;
+            return gradients[index];
+        }
+
+        function updateSliderFill(el) {
+            if (!el) return;
+            const min = el.min || 0;
+            const max = el.max || 10;
+            const val = el.value;
+            const percentage = (val - min) * 100 / (max - min);
+            el.style.backgroundSize = percentage + '% 100%';
+        }
+
+        // Init Icons
+        lucide.createIcons();
+
+        // State
+        let rawData = [];
+        let processedData = [];
+        let filteredData = [];
+        let columns = [];
+        let statusOverrides = {}; // Map: _id -> 'Shortlisted' | 'Borderline' | 'Rejected'
+
+        // --- NEW: Configuration-driven scoring ---
+        const scoringParams = [
+            { id: 'edu', keywords: ['education'], label: 'Education' },
+            { id: 'dom', keywords: ['domain'], label: 'Domain Fit' },
+            { id: 'exp', keywords: ['experien'], label: 'Experience' },
+            { id: 'req', keywords: ['requirement', 'tool', 'technolog'], label: 'Skills/Reqs' }
+        ];
+
+        let weights = {};
+        scoringParams.forEach(p => weights[p.id] = 5); // Default weight 5
+
+        let filters = {
+            search: '',
+            minExp: null,
+            domainMatch: 'all',
+            status: 'all'
+        };
+
+        // Pagination State
+        let currentPage = 1;
+        let rowsPerPage = 10;
+        let viewMode = 'table'; // 'table' | 'board'
+
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const fileInputOverlay = document.getElementById('fileInputOverlay');
+        const tableBody = document.getElementById('table-body');
+        const tableHead = document.getElementById('table-head');
+        const emptyState = document.getElementById('empty-state');
+        const tableWrapper = document.getElementById('table-wrapper');
+        const kanbanView = document.getElementById('kanban-view');
+        const tableToolbar = document.getElementById('table-toolbar');
+        const paginationContainer = document.getElementById('pagination-container');
+        const paginationControls = document.getElementById('pagination-controls');
+        const colToggleBtn = document.getElementById('col-toggle-btn');
+        const colDropdown = document.getElementById('col-dropdown');
+        const resultCountEl = document.getElementById('result-count');
+        const viewToggleBtn = document.getElementById('view-toggle-btn');
+        const viewLabel = document.getElementById('view-label');
+
+        const elCountShort = document.getElementById('count-shortlisted');
+        const elCountBorder = document.getElementById('count-borderline');
+        const elCountReject = document.getElementById('count-rejected');
+
+        // Toggle Dropdown
+        colToggleBtn.addEventListener('click', () => {
+            colDropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown')) {
+                colDropdown.classList.remove('show');
+            }
+        });
+
+        // Sliders
+        const sliderIds = ['edu', 'dom', 'exp', 'req'];
+
+        // Listeners
+        fileInput.addEventListener('change', handleFileUpload);
+        fileInputOverlay.addEventListener('change', handleFileUpload);
+
+        const sidebarWeightsContainer = document.querySelector('.slider-group');
+
+        function initWeightsUI() {
+            sidebarWeightsContainer.innerHTML = '';
+            scoringParams.forEach(param => {
+                const div = document.createElement('div');
+                div.className = 'slider-item';
+                div.innerHTML = `
+                    <div class="slider-header">
+                        <span>${param.label}</span>
+                        <span><span id="val-${param.id}" class="slider-value">${weights[param.id]}</span> <span id="pct-${param.id}" class="weight-percent">(25%)</span></span>
+                    </div>
+                    <input type="range" id="weight-${param.id}" min="0" max="10" value="${weights[param.id]}" step="1">
+                `;
+                sidebarWeightsContainer.appendChild(div);
+
+                const el = div.querySelector('input');
+                // Initial fill
+                updateSliderFill(el);
+
+                el.addEventListener('input', (e) => {
+                    weights[param.id] = parseInt(e.target.value);
+                    document.getElementById(`val-${param.id}`).innerText = weights[param.id];
+                    updateSliderFill(e.target);
+                    updatePercentages();
+                    recalculateAndRender();
+                });
+            });
+            updatePercentages();
+        }
+
+        // Call init to build UI
+        initWeightsUI();
+
+        // Filters listeners
+        document.getElementById('search-text').addEventListener('input', (e) => {
+            filters.search = e.target.value.toLowerCase();
+            currentPage = 1;
+            updateFilteredData();
+            if (viewMode === 'table') renderTable(); else renderKanban();
+        });
+        document.getElementById('filter-exp').addEventListener('input', (e) => {
+            filters.minExp = e.target.value ? parseFloat(e.target.value) : null;
+            currentPage = 1;
+            updateFilteredData();
+            if (viewMode === 'table') renderTable(); else renderKanban();
+        });
+        document.getElementById('filter-domain').addEventListener('change', (e) => {
+            filters.domainMatch = e.target.value;
+            currentPage = 1;
+            updateFilteredData();
+            if (viewMode === 'table') renderTable(); else renderKanban();
+        });
+        document.getElementById('filter-status').addEventListener('change', (e) => {
+            filters.status = e.target.value;
+            currentPage = 1;
+            updateFilteredData();
+            if (viewMode === 'table') renderTable(); else renderKanban();
+        });
+
+        function clearFilters() {
+            document.getElementById('search-text').value = '';
+            document.getElementById('filter-exp').value = '';
+            document.getElementById('filter-domain').value = 'all';
+            document.getElementById('filter-status').value = 'all';
+
+            filters = {
+                search: '',
+                minExp: null,
+                domainMatch: 'all',
+                status: 'all'
+            };
+
+            currentPage = 1;
+            updateFilteredData();
+            if (viewMode === 'table') renderTable(); else renderKanban();
+        }
+
+        function exportToExcel() {
+            alert("Export feature coming soon! (Feature in progress)");
+        }
+
+        function updatePercentages() {
+            let total = 0;
+            scoringParams.forEach(p => total += weights[p.id] || 0);
+
+            scoringParams.forEach(p => {
+                const pct = total === 0 ? 0 : Math.round((weights[p.id] / total) * 100);
+                const el = document.getElementById(`pct-${p.id}`);
+                if (el) el.innerText = `(${pct}%)`;
+            });
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                if (jsonData.length > 0) {
+                    // Assign Unique IDs for tracking manual overrides
+                    rawData = jsonData.map((row) => ({
+                        ...row,
+                        _id: crypto.randomUUID()
+                    }));
+                    statusOverrides = {}; // Reset overrides on new upload
+
+                    setupColumns(rawData[0]);
+                    emptyState.style.display = 'none';
+                    tableWrapper.style.display = 'block';
+                    tableToolbar.style.display = 'flex';
+                    paginationContainer.style.display = 'flex';
+                    recalculateAndRender();
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Define column definitions
+        const coreCols = [
+            { id: 'ManualSelect', label: 'Select', show: true, type: 'manual_select', width: '60px' },
+            { id: 'Candidate', label: 'Candidate', show: true, type: 'contact', width: '250px' },
+            { id: 'Exp', label: 'Exp (Yrs)', show: true, type: 'number', keyMatches: ['years of experience'], sortable: true, width: '100px' },
+            { id: 'Domain', label: 'Domain', show: true, type: 'boolean', keyMatches: ['domain match'], width: '100px' },
+            { id: 'Skills', label: 'Skills', show: true, type: 'tags', keyMatches: ['skill'], width: '300px' },
+            { id: 'Critical', label: 'Critical Match', show: false, type: 'tags', keyMatches: ['critical'], width: '200px' },
+            { id: 'NonCritical', label: 'Non-Critical', show: false, type: 'tags', keyMatches: ['non critical'], width: '200px' },
+            { id: 'Notes', label: 'Notes', show: false, type: 'text', keyMatches: ['note'], width: '250px' },
+            { id: 'Summary', label: 'AI Summary', show: false, type: 'text', keyMatches: ['summary'], width: '300px' },
+            { id: 'Redflag', label: 'Red Flags', show: true, type: 'tags', keyMatches: ['redflag'], width: '200px' },
+            { id: 'Subcards', label: 'Subcards (10)', show: true, type: 'subcards', width: '200px' },
+            { id: 'Score', label: 'Final Score', show: true, type: 'score', sortable: true, width: '120px' },
+            { id: 'Status', label: 'Status', show: true, type: 'status', width: '120px' }
+        ];
+
+        let cols = [];
+        let fieldMapping = {}; // Stores mapping: internalKey -> excelHeader
+
+        function setupColumns(rowSample) {
+            const keys = Object.keys(rowSample);
+
+            // Populate mapping for critical fields
+            fieldMapping.candidate = keys.find(k => k.toLowerCase().includes('name')) || '';
+            fieldMapping.experience = keys.find(k => k.toLowerCase().includes('years of experience') && !k.toLowerCase().includes('relevant')) || '';
+            fieldMapping.domainMatch = keys.find(k => k.toLowerCase().includes('domain match')) || '';
+            fieldMapping.skills = keys.find(k => k.toLowerCase().includes('skill')) || '';
+
+            cols = coreCols.map(c => {
+                if (c.type === 'contact' || c.type === 'subcards' || c.type === 'score' || c.type === 'status' || c.type === 'manual_select') {
+                    return c;
+                }
+                const foundKey = keys.find(k => {
+                    return c.keyMatches.some(m => k.toLowerCase().includes(m) && !k.toLowerCase().includes('score'));
+                });
+                return { ...c, dataKey: foundKey };
+            });
+
+            colDropdown.innerHTML = '';
+            cols.forEach((col, idx) => {
+                if (col.id === 'Score' || col.id === 'Status' || col.id === 'Candidate' || col.id === 'ManualSelect') return;
+
+                const label = document.createElement('label');
+                label.className = 'column-toggle';
+                label.innerHTML = `
+                    <input type="checkbox" ${col.show ? 'checked' : ''} onchange="toggleColumn(${idx}, this.checked)">
+                    <span>${sanitizeHTML(col.label)}</span>
+                `;
+                colDropdown.appendChild(label);
+            });
+
+            renderHeaders();
+        }
+
+        window.toggleColumn = function (idx, checked) {
+            cols[idx].show = checked;
+            renderHeaders();
+            renderTable();
+        }
+
+        function renderHeaders() {
+            let html = '<tr>';
+            cols.forEach((c, i) => {
+                if (!c.show) return;
+
+                // Add width style if exists in generic defaults, else auto
+                const widthStyle = c.width ? `style="width:${c.width}"` : '';
+
+                let thContent = '';
+                const sLabel = sanitizeHTML(c.label);
+                if (c.sortable) {
+                    thContent = `<div style="display: flex; align-items: center; justify-content: space-between;">
+                            ${sLabel}
+                            <i data-lucide="chevrons-up-down" style="width: 14px; opacity: 0.4;"></i>
+                        </div>`;
+                } else {
+                    thContent = sLabel;
+                }
+
+                // Add sort action only if sortable
+                const clickAction = c.sortable ? `onclick="sortTable('${c.id}')"` : '';
+                const baseClass = c.sortable ? 'sortable' : '';
+
+                html += `<th class="${baseClass}" ${widthStyle} ${clickAction} data-col-idx="${i}">
+                    ${thContent}
+                    <div class="resize-handle"></div>
+                </th>`;
+            });
+            html += '</tr>';
+            tableHead.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        /* --- Global Resize Delegation --- */
+        let startX, startWidth, resizingCol;
+
+        // Use event delegation on tableHead to handle all columns (dynamic or not)
+        tableHead.addEventListener('mousedown', function (e) {
+            if (e.target.classList.contains('resize-handle')) {
+                initResize(e);
+            }
+        });
+
+        function initResize(e) {
+            e.stopPropagation(); // Prevent sort click if bubble up
+            e.preventDefault();
+
+            const handle = e.target;
+            const th = handle.parentElement;
+
+            startX = e.pageX;
+            startWidth = th.offsetWidth;
+            resizingCol = th;
+
+            document.querySelector('.resize-handle.active')?.classList.remove('active');
+            handle.classList.add('active');
+
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+            document.body.style.cursor = 'col-resize';
+        }
+
+        function doResize(e) {
+            if (!resizingCol) return;
+            const diff = e.pageX - startX;
+            let newWidth = startWidth + diff;
+            if (newWidth < 50) newWidth = 50; // Min width
+
+            resizingCol.style.width = newWidth + 'px';
+
+            const colIdx = parseInt(resizingCol.getAttribute('data-col-idx'));
+            if (!isNaN(colIdx) && cols[colIdx]) {
+                cols[colIdx].width = newWidth + 'px';
+            }
+        }
+
+        function stopResize() {
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+            document.body.style.cursor = '';
+            if (resizingCol) {
+                const handle = resizingCol.querySelector('.resize-handle');
+                if (handle) handle.classList.remove('active');
+            }
+            resizingCol = null;
+        }
+
+        function safeFloat(val) {
+            const f = parseFloat(val);
+            return isNaN(f) ? 0 : f;
+        }
+
+        function calculateFinalScore(row) {
+            const keys = Object.keys(row);
+
+            let weightedSum = 0;
+            let totalWeight = 0;
+
+            scoringParams.forEach(param => {
+                const key = keys.find(k => {
+                    const low = k.toLowerCase();
+                    return low.includes('score') && param.keywords.some(kw => low.includes(kw));
+                });
+                const val = key ? safeFloat(row[key]) : 0;
+                weightedSum += (val * weights[param.id]);
+                totalWeight += weights[param.id];
+            });
+
+            if (totalWeight === 0) return 0;
+            const relativeScore = weightedSum / totalWeight;
+            return Math.round(relativeScore * 10);
+        }
+
+        function recalculateAndRender() {
+            let counts = {
+                'Shortlisted': 0,
+                'Borderline': 0,
+                'Rejected': 0
+            };
+
+            processedData = rawData.map(row => {
+                const score = calculateFinalScore(row);
+
+                // Determine Status: Check manual override first
+                const override = statusOverrides[row._id];
+                let status = 'Borderline';
+                if (override) {
+                    status = override;
+                } else {
+                    if (score >= 70) status = 'Shortlisted';
+                    if (score < 40) status = 'Rejected';
+                }
+
+                counts[status]++;
+
+                return {
+                    ...row,
+                    _calculatedScore: score,
+                    _calculatedStatus: status
+                };
+            });
+
+            elCountShort.innerText = counts['Shortlisted'];
+            elCountBorder.innerText = counts['Borderline'];
+            elCountReject.innerText = counts['Rejected'];
+
+            elCountShort.innerText = counts['Shortlisted'];
+            elCountBorder.innerText = counts['Borderline'];
+            elCountReject.innerText = counts['Rejected'];
+
+            updateFilteredData(); // Make sure filteredData is fresh
+
+            if (viewMode === 'table') {
+                tableWrapper.style.display = 'block';
+                kanbanView.style.display = 'none';
+                paginationContainer.style.display = 'flex';
+                renderTable();
+            } else {
+                tableWrapper.style.display = 'none';
+                kanbanView.style.display = 'flex';
+                paginationContainer.style.display = 'none';
+                renderKanban();
+            }
+        }
+
+        function updateFilteredData() {
+            filteredData = processedData.filter(item => {
+                const searchStr = filters.search;
+                const matchesSearch = !searchStr || Object.values(item).some(val => String(val).toLowerCase().includes(searchStr));
+
+                const expVal = fieldMapping.experience ? parseFloat(item[fieldMapping.experience]) : 0;
+                const matchesExp = filters.minExp === null || expVal >= filters.minExp;
+
+                const domValRaw = fieldMapping.domainMatch ? item[fieldMapping.domainMatch] : false;
+                const domVal = String(domValRaw).toLowerCase() === 'true' || domValRaw === 1 || String(domValRaw).toLowerCase() === 'yes';
+                const matchesDom = filters.domainMatch === 'all' || (filters.domainMatch === 'true' && domVal) || (filters.domainMatch === 'false' && !domVal);
+
+                const matchesStatus = filters.status === 'all' || item._calculatedStatus === filters.status;
+
+                return matchesSearch && matchesExp && matchesDom && matchesStatus;
+            });
+
+            resultCountEl.innerText = `Showing ${filteredData.length} candidates`;
+        }
+
+        // View Toggle
+        window.toggleViewMode = function () {
+            viewMode = viewMode === 'table' ? 'board' : 'table';
+            // Update Icon/Text
+            viewLabel.innerText = viewMode === 'table' ? 'Board' : 'List';
+
+            viewToggleBtn.innerHTML = viewMode === 'table'
+                ? `<i data-lucide="layout-grid" width="14"></i> <span id="view-label">Board</span>`
+                : `<i data-lucide="list" width="14"></i> <span id="view-label">List</span>`;
+
+            // Disable/Enable Sliders
+            const sliders = document.querySelectorAll('input[type="range"]');
+            sliders.forEach(s => s.disabled = (viewMode === 'board'));
+
+            // Disable/Enable Filters also? Maybe keep filters active.
+            // But sliders definitely affect calculation, so if we are in manual mode, visual consistency helps.
+            // Actually, manual overrides persist even if score changes, so disabling sliders is a good UX "Lock".
+
+            // Hide Columns button in Kanban view (not useful there)
+            const colWrapper = document.getElementById('col-toggle-wrapper');
+            if (colWrapper) colWrapper.style.display = viewMode === 'board' ? 'none' : 'block';
+
+            lucide.createIcons();
+            recalculateAndRender();
+        }
+
+        // Kanban Render
+        function renderKanban() {
+            // Clear lists
+            document.getElementById('list-shortlisted').innerHTML = '';
+            document.getElementById('list-borderline').innerHTML = '';
+            document.getElementById('list-rejected').innerHTML = '';
+
+            let counts = { 'Shortlisted': 0, 'Borderline': 0, 'Rejected': 0 };
+
+
+
+            // Sort by Score Descending for Kanban Board
+            const kanbanData = [...filteredData].sort((a, b) => b._calculatedScore - a._calculatedScore);
+
+            kanbanData.forEach(item => {
+                const status = item._calculatedStatus;
+                counts[status]++;
+
+                const card = document.createElement('div');
+                card.className = 'k-card';
+                card.draggable = true;
+                card.ondragstart = (e) => {
+                    e.currentTarget.classList.add('dragging');
+                    drag(e, String(item._id));
+                };
+                card.ondragend = (e) => {
+                    e.currentTarget.classList.remove('dragging');
+                };
+
+                // Get Key Info using fieldMapping
+                const nameKey = fieldMapping.candidate || 'Candidate';
+                const skillsKey = fieldMapping.skills || '';
+
+                // Fallback for role (not in fieldMapping yet)
+                const keys = Object.keys(item);
+                const kRole = keys.find(k => k.toLowerCase().includes('role') || k.toLowerCase().includes('job')) || '';
+
+                const scoreClass = item._calculatedScore >= 70 ? 'score-high' : (item._calculatedScore < 40 ? 'score-low' : 'score-mid');
+
+                // Dynamic Sparkline Logic
+                let sparklineHtml = '';
+                const paramColors = ['spark-edu', 'spark-dom', 'spark-exp', 'spark-req'];
+
+                scoringParams.forEach((param, idx) => {
+                    const key = keys.find(k => k.toLowerCase().includes('score') && param.keywords.some(kw => k.toLowerCase().includes(kw)));
+                    const val = key ? parseFloat(item[key]) || 0 : 0;
+                    const height = Math.min(100, Math.max(10, val * 10));
+                    sparklineHtml += `<div class="sparkline-bar ${paramColors[idx % paramColors.length]}" style="height:${height}%" title="${param.label}: ${val}"></div>`;
+                });
+
+                card.innerHTML = `
+                    <div class="k-card-header">
+                        <div class="name-cell-inner">
+                            <div class="avatar" style="background: ${getAvatarGradient(item[nameKey])}">
+                                ${getInitials(item[nameKey])}
+                            </div>
+                            <div>
+                                <div class="k-name">${sanitizeHTML(item[nameKey]) || 'Unknown Candidate'}</div>
+                                <div class="k-role">${sanitizeHTML(item[kRole]) || ''}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                            <div class="k-score ${scoreClass}">${item._calculatedScore}</div>
+                            <div class="sparkline-container" style="height:12px; width:45px; gap:1px;" title="Scores Breakdown">
+                                ${sparklineHtml}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="k-tags">
+                        ${renderTags(item[skillsKey]).replace('tag-container', '')}
+                    </div>
+                `;
+
+                if (status === 'Shortlisted') document.getElementById('list-shortlisted').appendChild(card);
+                else if (status === 'Borderline') document.getElementById('list-borderline').appendChild(card);
+                else if (status === 'Rejected') document.getElementById('list-rejected').appendChild(card);
+
+                // Add Click Handler for Modal
+                card.style.cursor = 'pointer';
+                card.onclick = (e) => {
+                    // Prevent trigger if clicking on score or tags if needed, 
+                    // but usually whole card is better.
+                    showCandidateModal(item._id);
+                };
+            });
+
+            document.getElementById('count-k-short').innerText = counts['Shortlisted'];
+            document.getElementById('count-k-border').innerText = counts['Borderline'];
+            document.getElementById('count-k-reject').innerText = counts['Rejected'];
+        }
+
+        // Drag and Drop
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('drag-over');
+        }
+
+        function leaveDrop(ev) {
+            ev.currentTarget.classList.remove('drag-over');
+        }
+
+        function drag(ev, id) {
+            ev.dataTransfer.setData("text", id);
+        }
+
+        function drop(ev, newStatus) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drag-over');
+            var id = ev.dataTransfer.getData("text");
+
+            if (id && statusOverrides) {
+                statusOverrides[id] = newStatus;
+                // Force recalculate
+                recalculateAndRender();
+            }
+        }
+
+
+        // Toggle Manual Shortlist
+        window.toggleManualShortlist = function (id, isChecked) {
+            if (isChecked) {
+                statusOverrides[id] = 'Shortlisted';
+            } else {
+                // If unchecking, we remove the override to let it fall back to calculation
+                // OR should we force it to Borderline? 
+                // Behavior: "Select" = Force Shortlist. "Unselect" = Restore Default.
+                delete statusOverrides[id];
+            }
+            recalculateAndRender();
+        }
+
+        function renderTags(val) {
+            if (!val) return '-';
+            let arr = [];
+            const strVal = String(val);
+            if (strVal.includes('|')) {
+                arr = strVal.split('|');
+            } else {
+                arr = strVal.split(',');
+            }
+            return `<div class="tag-container">${arr.map(t => t.trim()).filter(t => t).map(t => `<span class="badge badge-neutral">${sanitizeHTML(t)}</span>`).join('')}</div>`;
+        }
+
+        function renderTable() {
+            tableBody.innerHTML = '';
+
+            // Filtering moved to updateFilteredData() called before this
+
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            renderPaginationControls(totalPages);
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const pageData = filteredData.slice(startIdx, endIdx);
+
+            pageData.forEach(item => {
+                const tr = document.createElement('tr');
+                let html = '';
+
+                cols.forEach(c => {
+                    if (!c.show) return;
+
+                    if (c.type === 'manual_select') {
+                        // Check override first
+                        const override = statusOverrides[item._id];
+                        // If overridden to Shortlisted, check it. If Borderline/Rejected, uncheck.
+                        // If no override, check if calculated status is Shortlisted.
+                        const isShortlisted = override ? override === 'Shortlisted' : item._calculatedStatus === 'Shortlisted';
+
+                        html += `<td>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" class="custom-checkbox" 
+                                    ${isShortlisted ? 'checked' : ''} 
+                                    onchange="toggleManualShortlist('${item._id}', this.checked)">
+                            </div>
+                        </td>`;
+                    } else if (c.type === 'contact') {
+                        const startKeys = Object.keys(item);
+                        const kName = fieldMapping.candidate || '';
+                        const kEmail = startKeys.find(k => k.toLowerCase().includes('email')) || '';
+                        const kPhone = startKeys.find(k => k.toLowerCase().includes('phone')) || '';
+
+                        html += `<td>
+                            <div class="name-cell-inner" style="cursor:pointer;" onclick="showCandidateModal('${item._id}')">
+                                <div class="avatar" style="background: ${getAvatarGradient(item[kName])}">
+                                    ${getInitials(item[kName])}
+                                </div>
+                                <div class="contact-info">
+                                    <span style="font-weight:600; color:var(--text-main);">${sanitizeHTML(item[kName]) || 'Unknown'}</span>
+                                    <span style="font-size:0.75rem; color:var(--text-muted);">${sanitizeHTML(item[kEmail]) || ''}</span>
+                                    ${item[kPhone] ? `<span style="font-size:0.75rem; color:var(--text-muted);">${sanitizeHTML(item[kPhone])}</span>` : ''}
+                                </div>
+                            </div>
+                        </td>`;
+                    } else if (c.type === 'subcards') {
+                        const keys = Object.keys(item);
+                        const sEdu = item[keys.find(k => k.toLowerCase().includes('score on education'))] || '-';
+                        const sDom = item[keys.find(k => k.toLowerCase().includes('score on domain'))] || '-';
+                        const sExp = item[keys.find(k => k.toLowerCase().includes('score on experien'))] || '-';
+                        const sReq = item[keys.find(k => k.toLowerCase().includes('score on requirement'))] || '-';
+
+                        html += `<td>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 0.75rem; color: var(--text-muted);">
+                                <span>Edu: <b style="color:var(--text-main)">${sEdu}</b></span>
+                                <span>Dom: <b style="color:var(--text-main)">${sDom}</b></span>
+                                <span>Exp: <b style="color:var(--text-main)">${sExp}</b></span>
+                                <span>Req: <b style="color:var(--text-main)">${sReq}</b></span>
+                            </div>
+                        </td>`;
+                    } else if (c.type === 'score') {
+                        const score = item._calculatedScore;
+                        let scoreClass = 'score-mid';
+                        if (score >= 70) scoreClass = 'score-high';
+                        if (score < 40) scoreClass = 'score-low';
+
+                        // Dynamic Sparkline
+                        let sparklineHtml = '';
+                        const paramColors = ['spark-edu', 'spark-dom', 'spark-exp', 'spark-req'];
+                        const keys = Object.keys(item);
+
+                        scoringParams.forEach((param, idx) => {
+                            const key = keys.find(k => k.toLowerCase().includes('score') && param.keywords.some(kw => k.toLowerCase().includes(kw)));
+                            const val = key ? parseFloat(item[key]) || 0 : 0;
+                            const height = Math.min(100, Math.max(10, val * 10));
+                            sparklineHtml += `<div class="sparkline-bar ${paramColors[idx % paramColors.length]}" style="height:${height}%" title="${param.label}: ${val}"></div>`;
+                        });
+
+                        html += `<td>
+                            <div class="score-wrapper">
+                                <div class="final-score ${scoreClass}">${score}</div>
+                                <div class="sparkline-container" title="Scores Breakdown">
+                                    ${sparklineHtml}
+                                </div>
+                            </div>
+                        </td>`;
+                    } else if (c.type === 'status') {
+                        const status = item._calculatedStatus;
+                        let statusBadge = 'badge-neutral';
+                        if (status === 'Shortlisted') statusBadge = 'badge-success';
+                        if (status === 'Rejected') statusBadge = 'badge-danger';
+                        if (status === 'Borderline') statusBadge = 'badge-warning';
+                        html += `<td><span class="badge ${statusBadge}">${status}</span></td>`;
+                    } else if (c.type === 'tags') {
+                        const val = c.dataKey ? item[c.dataKey] : '';
+                        html += `<td class="cell-wrap">${renderTags(val)}</td>`;
+                    } else {
+                        const val = c.dataKey ? item[c.dataKey] : '';
+                        const sVal = sanitizeHTML(val);
+                        html += `<td title="${sVal}">${sVal}</td>`;
+                    }
+                });
+
+                tr.innerHTML = html;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        window.changePageSize = function (size) {
+            rowsPerPage = parseInt(size);
+            currentPage = 1;
+            renderTable();
+        }
+
+        window.goToPage = function (page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        function renderPaginationControls(totalPages) {
+            let html = `
+                <button class="btn-page" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
+                    <i data-lucide="chevron-left" width="14"></i>
+                </button>
+            `;
+
+            const maxVisible = 5;
+            let start = Math.max(1, currentPage - 2);
+            let end = Math.min(totalPages, start + maxVisible - 1);
+
+            if (end - start < maxVisible - 1) {
+                start = Math.max(1, end - maxVisible + 1);
+            }
+
+            if (start > 1) {
+                html += `<button class="btn-page" onclick="goToPage(1)">1</button>`;
+                if (start > 2) html += `<span class="dots">...</span>`;
+            }
+
+            for (let i = start; i <= end; i++) {
+                html += `<button class="btn-page ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            if (end < totalPages) {
+                if (end < totalPages - 1) html += `<span class="dots">...</span>`;
+                html += `<button class="btn-page" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+
+            html += `
+                <button class="btn-page" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
+                    <i data-lucide="chevron-right" width="14"></i>
+                </button>
+            `;
+
+            paginationControls.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        let sortDir = 1;
+        window.sortTable = function (colId) {
+            sortDir = -sortDir;
+
+            const colDef = cols.find(c => c.id === colId);
+            if (!colDef) return;
+
+            if (colId === 'Exp') {
+                processedData.sort((a, b) => {
+                    const vA = parseFloat(a[colDef.dataKey]) || 0;
+                    const vB = parseFloat(b[colDef.dataKey]) || 0;
+                    return (vA - vB) * sortDir;
+                });
+            } else if (colId === 'Score') {
+                processedData.sort((a, b) => (a._calculatedScore - b._calculatedScore) * sortDir);
+            } else if (colDef.sortable && colDef.dataKey) {
+                // Generic string sort for other sortable columns
+                processedData.sort((a, b) => {
+                    const vA = String(a[colDef.dataKey] || '').toLowerCase();
+                    const vB = String(b[colDef.dataKey] || '').toLowerCase();
+                    return vA.localeCompare(vB) * sortDir;
+                });
+            }
+
+            currentPage = 1;
+            // CRITICAL: We changed processedData order, so we must re-run filter/update steps to propagate order
+            updateFilteredData();
+            // Just render table as sort is table-specific feature usually
+            renderTable();
+        }
+
+        window.exportToExcel = function () {
+            if (processedData.length === 0) {
+                alert("No data to export!");
+                return;
+            }
+            const ws = XLSX.utils.json_to_sheet(processedData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Screening Results");
+            XLSX.writeFile(wb, "Screening_Results_Filtered.xlsx");
+        }
+        // Modal Functions
+        window.showCandidateModal = function (id) {
+            const item = processedData.find(d => d._id === id);
+            if (!item) return;
+
+            const modal = document.getElementById('candidate-modal');
+            const nameEl = document.getElementById('modal-name');
+            const roleEl = document.getElementById('modal-role');
+            const avatarEl = document.getElementById('modal-avatar');
+            const gridEl = document.getElementById('modal-details-grid');
+
+            const nameKey = fieldMapping.candidate || 'Candidate';
+            const keys = Object.keys(item);
+            const kRole = keys.find(k => k.toLowerCase().includes('role') || k.toLowerCase().includes('job')) || '';
+
+            nameEl.innerText = item[nameKey] || 'Unknown Candidate';
+            roleEl.innerText = item[kRole] || 'Candidate Profile';
+            avatarEl.innerText = getInitials(item[nameKey]);
+            avatarEl.style.background = getAvatarGradient(item[nameKey]);
+
+            gridEl.innerHTML = '';
+
+            // Show all relevant fields
+            keys.forEach(key => {
+                if (key.startsWith('_')) return; // Skip internal fields
+
+                const val = item[key];
+                if (val === null || val === undefined || val === '') return;
+
+                const div = document.createElement('div');
+                div.className = 'detail-item';
+                div.innerHTML = `
+                    <div class="detail-label">${sanitizeHTML(key)}</div>
+                    <div class="detail-value">${sanitizeHTML(val)}</div>
+                `;
+                gridEl.appendChild(div);
+            });
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        window.closeCandidateModal = function () {
+            const modal = document.getElementById('candidate-modal');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Close on Esc
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeCandidateModal();
+        });
+    </script>
+
+    <!-- Modal Structure -->
+    <div id="candidate-modal" class="modal-overlay" onclick="closeCandidateModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div id="modal-avatar" class="avatar" style="width: 48px; height: 48px; font-size: 1.1rem;"></div>
+                <div class="modal-title-group">
+                    <h2 id="modal-name"></h2>
+                    <div id="modal-role"></div>
+                </div>
+                <button class="btn-close" onclick="closeCandidateModal()">
+                    <i data-lucide="x" width="18"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-details-grid">
+                <!-- Details injected here -->
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
