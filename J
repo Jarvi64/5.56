@@ -1,689 +1,472 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "description": "Process Capability Histogram with Control Limits",
-  "autosize": {
-    "type": "fit",
-    "contains": "padding"
-  },
+  "description": "Process Capability Analysis",
   "width": "container",
-  "height": "container",
+  "background": "#f8f9fa",
+  "padding": {"left": 20, "right": 20, "top": 10, "bottom": 10},
   "data": {"name": "dataset"},
-  "layer": [
+  "vconcat": [
     {
-      "mark": {
-        "type": "bar",
-        "color": "#4682B4",
-        "opacity": 0.7
-      },
-      "encoding": {
-        "x": {
-          "bin": {"maxbins": 30},
-          "field": "measuredvalue",
-          "type": "quantitative",
-          "title": "Measured Value"
-        },
-        "y": {
-          "aggregate": "count",
-          "type": "quantitative",
-          "title": "Frequency"
-        },
-        "tooltip": [
-          {"bin": true, "field": "measuredvalue", "type": "quantitative", "title": "Range"},
-          {"aggregate": "count", "type": "quantitative", "title": "Frequency"}
-        ]
-      }
-    },
-    {
+      "width": "container",
+      "height": 110,
       "data": {"name": "dataset"},
       "transform": [
         {
           "aggregate": [
             {"op": "mean", "field": "measuredvalue", "as": "xbar"},
             {"op": "max", "field": "measuredvalue", "as": "max_val"},
-            {"op": "min", "field": "measuredvalue", "as": "min_val"}
+            {"op": "min", "field": "measuredvalue", "as": "min_val"},
+            {"op": "max", "field": "sampleqty", "as": "n"},
+            {"op": "max", "field": "upperlimit", "as": "usl"},
+            {"op": "max", "field": "lowerlimit", "as": "lsl"},
+            {"op": "max", "field": "nominallimit", "as": "nominal"},
+            {"op": "max", "field": "cleanname", "as": "variant"},
+            {"op": "count", "as": "samples_in_lot"}
           ],
           "groupby": ["lot_breaker_id"]
         },
-        {
-          "calculate": "datum.max_val - datum.min_val",
-          "as": "range"
-        },
+        {"calculate": "datum.max_val - datum.min_val", "as": "range"},
         {
           "joinaggregate": [
             {"op": "mean", "field": "xbar", "as": "grandxbar"},
             {"op": "mean", "field": "range", "as": "rbar"},
-            {"op": "count", "as": "num_subgroups"}
+            {"op": "count", "as": "num_lots"},
+            {"op": "sum", "field": "samples_in_lot", "as": "total_samples"}
           ]
         },
         {
-          "calculate": "1",
-          "as": "dummy"
+          "calculate": "datum.n == 2 ? 1.128 : datum.n == 3 ? 1.693 : datum.n == 4 ? 2.059 : datum.n == 5 ? 2.326 : datum.n == 6 ? 2.534 : datum.n == 7 ? 2.704 : datum.n == 8 ? 2.847 : datum.n == 9 ? 2.970 : datum.n == 10 ? 3.078 : 2.326",
+          "as": "d2"
+        },
+        {"calculate": "datum.rbar / datum.d2", "as": "sigma_within"},
+        {
+          "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
+          "as": "a2"
+        },
+        {"calculate": "datum.grandxbar + (datum.a2 * datum.rbar)", "as": "ucl"},
+        {"calculate": "datum.grandxbar - (datum.a2 * datum.rbar)", "as": "lcl"},
+        {"calculate": "(datum.usl - datum.lsl) / (6 * datum.sigma_within)", "as": "cp"},
+        {
+          "calculate": "min((datum.usl - datum.grandxbar) / (3 * datum.sigma_within), (datum.grandxbar - datum.lsl) / (3 * datum.sigma_within))",
+          "as": "cpk"
+        },
+        {
+          "aggregate": [
+            {"op": "max", "field": "variant", "as": "variant"},
+            {"op": "max", "field": "n", "as": "sample_qty"},
+            {"op": "max", "field": "total_samples", "as": "total_samples"},
+            {"op": "max", "field": "num_lots", "as": "num_lots"},
+            {"op": "max", "field": "lsl", "as": "lsl"},
+            {"op": "max", "field": "usl", "as": "usl"},
+            {"op": "max", "field": "nominal", "as": "nominal"},
+            {"op": "max", "field": "lcl", "as": "lcl"},
+            {"op": "max", "field": "ucl", "as": "ucl"},
+            {"op": "max", "field": "grandxbar", "as": "mean"},
+            {"op": "max", "field": "cp", "as": "cp"},
+            {"op": "max", "field": "cpk", "as": "cpk"}
+          ]
+        },
+        {
+          "calculate": "datum.cpk >= 1.33 ? 'Capable' : datum.cpk >= 1.0 ? 'Marginal' : 'Incapable'",
+          "as": "status"
+        },
+        {
+          "calculate": "datum.cpk >= 1.33 ? '#27ae60' : datum.cpk >= 1.0 ? '#f39c12' : '#e74c3c'",
+          "as": "status_color"
         }
       ],
       "layer": [
         {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "overall_mean"},
-                {"op": "stdev", "field": "measuredvalue", "as": "stdev"},
-                {"op": "count", "as": "total_count"}
-              ]
-            },
-            {
-              "calculate": "1",
-              "as": "dummy"
-            }
-          ],
-          "layer": [
-            {
-              "data": {"name": "dataset"},
-              "transform": [
-                {
-                  "aggregate": [
-                    {"op": "mean", "field": "measuredvalue", "as": "xbar"},
-                    {"op": "max", "field": "measuredvalue", "as": "max_val"},
-                    {"op": "min", "field": "measuredvalue", "as": "min_val"}
-                  ],
-                  "groupby": ["lot_breaker_id"]
-                },
-                {
-                  "calculate": "datum.max_val - datum.min_val",
-                  "as": "range"
-                },
-                {
-                  "joinaggregate": [
-                    {"op": "mean", "field": "xbar", "as": "grandxbar"},
-                    {"op": "mean", "field": "range", "as": "rbar"}
-                  ]
-                },
-                {
-                  "calculate": "1",
-                  "as": "dummy"
-                }
-              ],
-              "layer": [
-                {
-                  "data": {"name": "dataset"},
-                  "transform": [
-                    {
-                      "aggregate": [
-                        {"op": "mean", "field": "measuredvalue", "as": "overall_mean"},
-                        {"op": "stdev", "field": "measuredvalue", "as": "stdev"},
-                        {"op": "count", "as": "total_count"}
-                      ]
-                    },
-                    {"calculate": "datum.overall_mean - 4 * datum.stdev", "as": "x_min"},
-                    {"calculate": "datum.overall_mean + 4 * datum.stdev", "as": "x_max"},
-                    {"calculate": "sequence(datum.x_min, datum.x_max, (datum.x_max - datum.x_min) / 100)", "as": "x_seq"},
-            {"flatten": ["x_seq"]},
-            {"calculate": "datum.x_seq", "as": "x"},
-            {
-              "calculate": "(1 / (datum.stdev * sqrt(2 * PI))) * exp(-0.5 * pow((datum.x - datum.overall_mean) / datum.stdev, 2))",
-              "as": "density"
-            },
-            {
-              "calculate": "datum.density * datum.total_count * ((datum.x_max - datum.x_min) / 25)",
-              "as": "y"
-            }
-          ],
           "mark": {
-            "type": "line",
-            "color": "#e74c3c",
-            "strokeWidth": 3
+            "type": "rect",
+            "fill": "white",
+            "stroke": "#34495e",
+            "strokeWidth": 2,
+            "cornerRadius": 10
           },
           "encoding": {
-            "x": {
-              "field": "x",
-              "type": "quantitative"
-            },
-            "y": {
-              "field": "y",
-              "type": "quantitative"
-            }
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "xbar"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"}
-              ]
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "grandxbar", "as": "mean_val"}
-              ]
-            }
-          ],
-          "mark": {
-            "type": "rule",
-            "strokeDash": [6, 4],
-            "color": "#27ae60",
-            "strokeWidth": 2.5
-          },
-          "encoding": {
-            "x": {
-              "field": "mean_val",
-              "type": "quantitative"
-            }
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "xbar"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"}
-              ]
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "grandxbar", "as": "mean_val"}
-              ]
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -35,
-            "fontSize": 10,
-            "fontWeight": "600",
-            "color": "#27ae60"
-          },
-          "encoding": {
-            "x": {
-              "field": "mean_val",
-              "type": "quantitative"
-            },
+            "x": {"value": 0},
+            "x2": {"signal": "width"},
             "y": {"value": 0},
-            "text": {"value": "X̄̄"}
+            "y2": {"value": 110}
           }
         },
         {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "xbar"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"}
-              ]
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "grandxbar", "as": "mean_val"}
-              ]
-            }
-          ],
           "mark": {
-            "type": "text",
-            "dy": -20,
-            "fontSize": 11,
-            "fontWeight": "bold",
-            "color": "#27ae60"
+            "type": "rect",
+            "fill": "#34495e",
+            "cornerRadiusTopLeft": 10,
+            "cornerRadiusTopRight": 10
           },
           "encoding": {
-            "x": {
-              "field": "mean_val",
-              "type": "quantitative"
-            },
+            "x": {"value": 0},
+            "x2": {"signal": "width"},
             "y": {"value": 0},
-            "text": {"field": "mean_val", "type": "quantitative", "format": ".3f"}
+            "y2": {"value": 32}
           }
         },
         {
-          "data": {"name": "dataset"},
-          "transform": [
-            {"aggregate": [{"op": "max", "field": "lowerlimit", "as": "lsl_value"}]}
-          ],
-          "mark": {
-            "type": "rule",
-            "strokeDash": [5, 5],
-            "color": "#c0392b",
-            "strokeWidth": 2.5
-          },
+          "mark": {"type": "text", "fontSize": 15, "fontWeight": "bold", "color": "white", "align": "left", "baseline": "middle"},
           "encoding": {
-            "x": {
-              "field": "lsl_value",
-              "type": "quantitative"
-            }
+            "x": {"value": 15},
+            "y": {"value": 16},
+            "text": {"field": "variant"}
           }
         },
         {
-          "data": {"name": "dataset"},
-          "transform": [
-            {"aggregate": [{"op": "max", "field": "lowerlimit", "as": "lsl_value"}]}
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -35,
-            "fontSize": 10,
-            "fontWeight": "600",
-            "color": "#c0392b",
-            "align": "center"
-          },
+          "mark": {"type": "text", "fontSize": 10, "color": "#7f8c8d", "align": "left"},
+          "encoding": {"x": {"value": 15}, "y": {"value": 48}, "text": {"value": "Sample Qty"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 13, "fontWeight": "bold", "color": "#2c3e50", "align": "left"},
+          "encoding": {"x": {"value": 15}, "y": {"value": 63}, "text": {"field": "sample_qty"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#7f8c8d", "align": "left"},
+          "encoding": {"x": {"value": 95}, "y": {"value": 48}, "text": {"value": "Total Samples"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 13, "fontWeight": "bold", "color": "#2c3e50", "align": "left"},
+          "encoding": {"x": {"value": 95}, "y": {"value": 63}, "text": {"field": "total_samples"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#7f8c8d", "align": "left"},
+          "encoding": {"x": {"value": 195}, "y": {"value": 48}, "text": {"value": "No. of Lots"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 13, "fontWeight": "bold", "color": "#2c3e50", "align": "left"},
+          "encoding": {"x": {"value": 195}, "y": {"value": 63}, "text": {"field": "num_lots"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#27ae60", "fontWeight": "600", "align": "left"},
+          "encoding": {"x": {"value": 280}, "y": {"value": 48}, "text": {"value": "X̄̄ (Mean)"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 13, "fontWeight": "bold", "color": "#27ae60", "align": "left"},
+          "encoding": {"x": {"value": 280}, "y": {"value": 63}, "text": {"field": "mean", "format": ".4f"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#c0392b", "fontWeight": "600", "align": "left"},
+          "encoding": {"x": {"value": 380}, "y": {"value": 48}, "text": {"value": "LSL"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 12, "fontWeight": "bold", "color": "#c0392b", "align": "left"},
+          "encoding": {"x": {"value": 380}, "y": {"value": 63}, "text": {"field": "lsl", "format": ".3f"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#8e44ad", "fontWeight": "600", "align": "left"},
+          "encoding": {"x": {"value": 440}, "y": {"value": 48}, "text": {"value": "Nominal"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 12, "fontWeight": "bold", "color": "#8e44ad", "align": "left"},
+          "encoding": {"x": {"value": 440}, "y": {"value": 63}, "text": {"field": "nominal", "format": ".3f"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#c0392b", "fontWeight": "600", "align": "left"},
+          "encoding": {"x": {"value": 510}, "y": {"value": 48}, "text": {"value": "USL"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 12, "fontWeight": "bold", "color": "#c0392b", "align": "left"},
+          "encoding": {"x": {"value": 510}, "y": {"value": 63}, "text": {"field": "usl", "format": ".3f"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#e67e22", "fontWeight": "600", "align": "left"},
+          "encoding": {"x": {"value": 570}, "y": {"value": 48}, "text": {"value": "LCL"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 12, "fontWeight": "bold", "color": "#e67e22", "align": "left"},
+          "encoding": {"x": {"value": 570}, "y": {"value": 63}, "text": {"field": "lcl", "format": ".4f"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#e67e22", "fontWeight": "600", "align": "left"},
+          "encoding": {"x": {"value": 640}, "y": {"value": 48}, "text": {"value": "UCL"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 12, "fontWeight": "bold", "color": "#e67e22", "align": "left"},
+          "encoding": {"x": {"value": 640}, "y": {"value": 63}, "text": {"field": "ucl", "format": ".4f"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#27ae60", "fontWeight": "600", "align": "left"},
+          "encoding": {"x": {"value": 710}, "y": {"value": 48}, "text": {"value": "Cp"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 14, "fontWeight": "bold", "color": "#27ae60", "align": "left"},
+          "encoding": {"x": {"value": 710}, "y": {"value": 65}, "text": {"field": "cp", "format": ".3f"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 10, "color": "#27ae60", "fontWeight": "600", "align": "left"},
+          "encoding": {"x": {"value": 760}, "y": {"value": 48}, "text": {"value": "Cpk"}}
+        },
+        {
+          "mark": {"type": "text", "fontSize": 14, "fontWeight": "bold", "color": "#27ae60", "align": "left"},
+          "encoding": {"x": {"value": 760}, "y": {"value": 65}, "text": {"field": "cpk", "format": ".3f"}}
+        },
+        {
+          "mark": {"type": "rect", "cornerRadius": 5},
           "encoding": {
-            "x": {
-              "field": "lsl_value",
-              "type": "quantitative"
-            },
-            "y": {"value": 0},
-            "text": {"value": "LSL"}
+            "x": {"value": 15},
+            "x2": {"value": 95},
+            "y": {"value": 80},
+            "y2": {"value": 100},
+            "fill": {"field": "status_color", "type": "nominal", "scale": null}
           }
         },
         {
-          "data": {"name": "dataset"},
-          "transform": [
-            {"aggregate": [{"op": "max", "field": "lowerlimit", "as": "lsl_value"}]}
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -20,
-            "fontSize": 11,
-            "fontWeight": "bold",
-            "color": "#c0392b",
-            "align": "center"
-          },
+          "mark": {"type": "text", "fontSize": 11, "fontWeight": "bold", "color": "white", "align": "center"},
           "encoding": {
-            "x": {
-              "field": "lsl_value",
-              "type": "quantitative"
-            },
-            "y": {"value": 0},
-            "text": {"field": "lsl_value", "type": "quantitative", "format": ".3f"}
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {"aggregate": [{"op": "max", "field": "upperlimit", "as": "usl_value"}]}
-          ],
-          "mark": {
-            "type": "rule",
-            "strokeDash": [5, 5],
-            "color": "#c0392b",
-            "strokeWidth": 2.5
-          },
-          "encoding": {
-            "x": {
-              "field": "usl_value",
-              "type": "quantitative"
-            }
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {"aggregate": [{"op": "max", "field": "upperlimit", "as": "usl_value"}]}
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -35,
-            "fontSize": 10,
-            "fontWeight": "600",
-            "color": "#c0392b",
-            "align": "center"
-          },
-          "encoding": {
-            "x": {
-              "field": "usl_value",
-              "type": "quantitative"
-            },
-            "y": {"value": 0},
-            "text": {"value": "USL"}
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {"aggregate": [{"op": "max", "field": "upperlimit", "as": "usl_value"}]}
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -20,
-            "fontSize": 11,
-            "fontWeight": "bold",
-            "color": "#c0392b",
-            "align": "center"
-          },
-          "encoding": {
-            "x": {
-              "field": "usl_value",
-              "type": "quantitative"
-            },
-            "y": {"value": 0},
-            "text": {"field": "usl_value", "type": "quantitative", "format": ".3f"}
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "xbar"},
-                {"op": "max", "field": "measuredvalue", "as": "max_val"},
-                {"op": "min", "field": "measuredvalue", "as": "min_val"},
-                {"op": "max", "field": "sampleqty", "as": "n"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "calculate": "datum.max_val - datum.min_val",
-              "as": "range"
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"},
-                {"op": "mean", "field": "range", "as": "rbar"}
-              ]
-            },
-            {
-              "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
-              "as": "a2"
-            },
-            {
-              "calculate": "datum.grandxbar + (datum.a2 * datum.rbar)",
-              "as": "ucl"
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "ucl", "as": "ucl_value"}
-              ]
-            }
-          ],
-          "mark": {
-            "type": "rule",
-            "strokeDash": [8, 4],
-            "color": "#e67e22",
-            "strokeWidth": 2.5
-          },
-          "encoding": {
-            "x": {
-              "field": "ucl_value",
-              "type": "quantitative"
-            }
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "xbar"},
-                {"op": "max", "field": "measuredvalue", "as": "max_val"},
-                {"op": "min", "field": "measuredvalue", "as": "min_val"},
-                {"op": "max", "field": "sampleqty", "as": "n"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "calculate": "datum.max_val - datum.min_val",
-              "as": "range"
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"},
-                {"op": "mean", "field": "range", "as": "rbar"}
-              ]
-            },
-            {
-              "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
-              "as": "a2"
-            },
-            {
-              "calculate": "datum.grandxbar + (datum.a2 * datum.rbar)",
-              "as": "ucl"
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "ucl", "as": "ucl_value"}
-              ]
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -35,
-            "fontSize": 10,
-            "fontWeight": "600",
-            "color": "#e67e22",
-            "align": "center"
-          },
-          "encoding": {
-            "x": {
-              "field": "ucl_value",
-              "type": "quantitative"
-            },
-            "y": {"value": 0},
-            "text": {"value": "UCL"}
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "xbar"},
-                {"op": "max", "field": "measuredvalue", "as": "max_val"},
-                {"op": "min", "field": "measuredvalue", "as": "min_val"},
-                {"op": "max", "field": "sampleqty", "as": "n"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "calculate": "datum.max_val - datum.min_val",
-              "as": "range"
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"},
-                {"op": "mean", "field": "range", "as": "rbar"}
-              ]
-            },
-            {
-              "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
-              "as": "a2"
-            },
-            {
-              "calculate": "datum.grandxbar + (datum.a2 * datum.rbar)",
-              "as": "ucl"
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "ucl", "as": "ucl_value"}
-              ]
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -20,
-            "fontSize": 11,
-            "fontWeight": "bold",
-            "color": "#e67e22",
-            "align": "center"
-          },
-          "encoding": {
-            "x": {
-              "field": "ucl_value",
-              "type": "quantitative"
-            },
-            "y": {"value": 0},
-            "text": {"field": "ucl_value", "type": "quantitative", "format": ".3f"}
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "xbar"},
-                {"op": "max", "field": "measuredvalue", "as": "max_val"},
-                {"op": "min", "field": "measuredvalue", "as": "min_val"},
-                {"op": "max", "field": "sampleqty", "as": "n"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "calculate": "datum.max_val - datum.min_val",
-              "as": "range"
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"},
-                {"op": "mean", "field": "range", "as": "rbar"}
-              ]
-            },
-            {
-              "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
-              "as": "a2"
-            },
-            {
-              "calculate": "datum.grandxbar - (datum.a2 * datum.rbar)",
-              "as": "lcl"
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "lcl", "as": "lcl_value"}
-              ]
-            }
-          ],
-          "mark": {
-            "type": "rule",
-            "strokeDash": [8, 4],
-            "color": "#e67e22",
-            "strokeWidth": 2.5
-          },
-          "encoding": {
-            "x": {
-              "field": "lcl_value",
-              "type": "quantitative"
-            }
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-                {"op": "mean", "field": "measuredvalue", "as": "xbar"},
-                {"op": "max", "field": "measuredvalue", "as": "max_val"},
-                {"op": "min", "field": "measuredvalue", "as": "min_val"},
-                {"op": "max", "field": "sampleqty", "as": "n"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "calculate": "datum.max_val - datum.min_val",
-              "as": "range"
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"},
-                {"op": "mean", "field": "range", "as": "rbar"}
-              ]
-            },
-            {
-              "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
-              "as": "a2"
-            },
-            {
-              "calculate": "datum.grandxbar - (datum.a2 * datum.rbar)",
-              "as": "lcl"
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "lcl", "as": "lcl_value"}
-              ]
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -35,
-            "fontSize": 10,
-            "fontWeight": "600",
-            "color": "#e67e22",
-            "align": "center"
-          },
-          "encoding": {
-            "x": {
-              "field": "lcl_value",
-              "type": "quantitative"
-            },
-            "y": {"value": 0},
-            "text": {"value": "LCL"}
-          }
-        },
-        {
-          "data": {"name": "dataset"},
-          "transform": [
-            {
-              "aggregate": [
-{"op": "mean", "field": "measuredvalue", "as": "xbar"},
-                {"op": "max", "field": "measuredvalue", "as": "max_val"},
-                {"op": "min", "field": "measuredvalue", "as": "min_val"},
-                {"op": "max", "field": "sampleqty", "as": "n"}
-              ],
-              "groupby": ["lot_breaker_id"]
-            },
-            {
-              "calculate": "datum.max_val - datum.min_val",
-              "as": "range"
-            },
-            {
-              "joinaggregate": [
-                {"op": "mean", "field": "xbar", "as": "grandxbar"},
-                {"op": "mean", "field": "range", "as": "rbar"}
-              ]
-            },
-            {
-              "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
-              "as": "a2"
-            },
-            {
-              "calculate": "datum.grandxbar - (datum.a2 * datum.rbar)",
-              "as": "lcl"
-            },
-            {
-              "aggregate": [
-                {"op": "max", "field": "lcl", "as": "lcl_value"}
-              ]
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "dy": -20,
-            "fontSize": 11,
-            "fontWeight": "bold",
-            "color": "#e67e22",
-            "align": "center"
-          },
-          "encoding": {
-            "x": {
-              "field": "lcl_value",
-              "type": "quantitative"
-            },
-            "y": {"value": 0},
-            "text": {"field": "lcl_value", "type": "quantitative", "format": ".3f"}
+            "x": {"value": 55},
+            "y": {"value": 90},
+            "text": {"field": "status"}
           }
         }
       ]
+    },
+    {
+      "width": "container",
+      "height": 350,
+      "data": {"name": "dataset"},
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "color": "#5a9bd5",
+            "opacity": 0.75,
+            "cornerRadiusTopLeft": 2,
+            "cornerRadiusTopRight": 2
+          },
+          "encoding": {
+            "x": {
+              "bin": {"maxbins": 20},
+              "field": "measuredvalue",
+              "type": "quantitative",
+              "title": "Measured Value",
+              "axis": {
+                "labelFontSize": 11,
+                "titleFontSize": 13,
+                "titleFontWeight": 600,
+                "labelAngle": 0,
+                "format": ".2f",
+                "grid": true,
+                "gridOpacity": 0.2
+              }
+            },
+            "y": {
+              "aggregate": "count",
+              "type": "quantitative",
+              "title": "Frequency",
+              "axis": {
+                "labelFontSize": 11,
+                "titleFontSize": 13,
+                "titleFontWeight": 600,
+                "grid": true,
+                "gridOpacity": 0.2
+              }
+            },
+            "tooltip": [
+              {"bin": true, "field": "measuredvalue", "type": "quantitative", "title": "Range", "format": ".4f"},
+              {"aggregate": "count", "type": "quantitative", "title": "Frequency"}
+            ]
+          }
+        },
+        {
+          "data": {"name": "dataset"},
+          "transform": [
+            {
+              "aggregate": [
+                {"op": "mean", "field": "measuredvalue", "as": "mean"},
+                {"op": "stdev", "field": "measuredvalue", "as": "stdev"},
+                {"op": "count", "as": "total_count"},
+                {"op": "min", "field": "measuredvalue", "as": "data_min"},
+                {"op": "max", "field": "measuredvalue", "as": "data_max"}
+              ]
+            },
+            {"calculate": "datum.mean - 4 * datum.stdev", "as": "x_min"},
+            {"calculate": "datum.mean + 4 * datum.stdev", "as": "x_max"},
+            {"calculate": "(datum.data_max - datum.data_min) / 20", "as": "bin_width"},
+            {"calculate": "sequence(datum.x_min, datum.x_max, (datum.x_max - datum.x_min) / 100)", "as": "x_seq"},
+            {"flatten": ["x_seq"]},
+            {"calculate": "datum.x_seq", "as": "x"},
+            {
+              "calculate": "(1 / (datum.stdev * sqrt(2 * PI))) * exp(-0.5 * pow((datum.x - datum.mean) / datum.stdev, 2))",
+              "as": "density"
+            },
+            {"calculate": "datum.density * datum.total_count * datum.bin_width", "as": "y"}
+          ],
+          "mark": {"type": "line", "color": "#e74c3c", "strokeWidth": 2.5},
+          "encoding": {
+            "x": {"field": "x", "type": "quantitative"},
+            "y": {"field": "y", "type": "quantitative"}
+          }
+        },
+        {
+          "data": {"name": "dataset"},
+          "transform": [
+            {
+              "aggregate": [{"op": "mean", "field": "measuredvalue", "as": "xbar"}],
+              "groupby": ["lot_breaker_id"]
+            },
+            {"aggregate": [{"op": "mean", "field": "xbar", "as": "grandxbar"}]}
+          ],
+          "layer": [
+            {
+              "mark": {"type": "rule", "strokeDash": [6, 4], "color": "#27ae60", "strokeWidth": 2.5},
+              "encoding": {"x": {"field": "grandxbar", "type": "quantitative"}}
+            },
+            {
+              "mark": {"type": "text", "dy": -15, "fontSize": 10, "fontWeight": "600", "color": "#27ae60"},
+              "encoding": {
+                "x": {"field": "grandxbar", "type": "quantitative"},
+                "y": {"value": 0},
+                "text": {"value": "X̄̄"}
+              }
+            }
+          ]
+        },
+        {
+          "data": {"name": "dataset"},
+          "transform": [{"aggregate": [{"op": "max", "field": "lowerlimit", "as": "lsl"}]}],
+          "layer": [
+            {
+              "mark": {"type": "rule", "strokeDash": [5, 5], "color": "#c0392b", "strokeWidth": 2.5},
+              "encoding": {"x": {"field": "lsl", "type": "quantitative"}}
+            },
+            {
+              "mark": {"type": "text", "dy": -15, "fontSize": 10, "fontWeight": "600", "color": "#c0392b"},
+              "encoding": {
+                "x": {"field": "lsl", "type": "quantitative"},
+                "y": {"value": 0},
+                "text": {"value": "LSL"}
+              }
+            }
+          ]
+        },
+        {
+          "data": {"name": "dataset"},
+          "transform": [{"aggregate": [{"op": "max", "field": "upperlimit", "as": "usl"}]}],
+          "layer": [
+            {
+              "mark": {"type": "rule", "strokeDash": [5, 5], "color": "#c0392b", "strokeWidth": 2.5},
+              "encoding": {"x": {"field": "usl", "type": "quantitative"}}
+            },
+            {
+              "mark": {"type": "text", "dy": -15, "fontSize": 10, "fontWeight": "600", "color": "#c0392b"},
+              "encoding": {
+                "x": {"field": "usl", "type": "quantitative"},
+                "y": {"value": 0},
+                "text": {"value": "USL"}
+              }
+            }
+          ]
+        },
+        {
+          "data": {"name": "dataset"},
+          "transform": [{"aggregate": [{"op": "max", "field": "nominallimit", "as": "nominal"}]}],
+          "layer": [
+            {
+              "mark": {"type": "rule", "strokeDash": [2, 2], "color": "#8e44ad", "strokeWidth": 2},
+              "encoding": {"x": {"field": "nominal", "type": "quantitative"}}
+            },
+            {
+              "mark": {"type": "text", "dy": -15, "fontSize": 10, "fontWeight": "600", "color": "#8e44ad"},
+              "encoding": {
+                "x": {"field": "nominal", "type": "quantitative"},
+                "y": {"value": 0},
+                "text": {"value": "Nom"}
+              }
+            }
+          ]
+        },
+        {
+          "data": {"name": "dataset"},
+          "transform": [
+            {
+              "aggregate": [
+                {"op": "mean", "field": "measuredvalue", "as": "xbar"},
+                {"op": "max", "field": "measuredvalue", "as": "max_val"},
+                {"op": "min", "field": "measuredvalue", "as": "min_val"},
+                {"op": "max", "field": "sampleqty", "as": "n"}
+              ],
+              "groupby": ["lot_breaker_id"]
+            },
+            {"calculate": "datum.max_val - datum.min_val", "as": "range"},
+            {
+              "joinaggregate": [
+                {"op": "mean", "field": "xbar", "as": "grandxbar"},
+                {"op": "mean", "field": "range", "as": "rbar"}
+              ]
+            },
+            {
+              "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
+              "as": "a2"
+            },
+            {"calculate": "datum.grandxbar + (datum.a2 * datum.rbar)", "as": "ucl"},
+            {"aggregate": [{"op": "max", "field": "ucl", "as": "ucl_val"}]}
+          ],
+          "layer": [
+            {
+              "mark": {"type": "rule", "strokeDash": [8, 4], "color": "#e67e22", "strokeWidth": 2},
+              "encoding": {"x": {"field": "ucl_val", "type": "quantitative"}}
+            },
+            {
+              "mark": {"type": "text", "dy": -15, "fontSize": 10, "fontWeight": "600", "color": "#e67e22"},
+              "encoding": {
+                "x": {"field": "ucl_val", "type": "quantitative"},
+                "y": {"value": 0},
+                "text": {"value": "UCL"}
+              }
+            }
+          ]
+        },
+        {
+          "data": {"name": "dataset"},
+          "transform": [
+            {
+              "aggregate": [
+                {"op": "mean", "field": "measuredvalue", "as": "xbar"},
+                {"op": "max", "field": "measuredvalue", "as": "max_val"},
+                {"op": "min", "field": "measuredvalue", "as": "min_val"},
+                {"op": "max", "field": "sampleqty", "as": "n"}
+              ],
+              "groupby": ["lot_breaker_id"]
+            },
+            {"calculate": "datum.max_val - datum.min_val", "as": "range"},
+            {
+              "joinaggregate": [
+                {"op": "mean", "field": "xbar", "as": "grandxbar"},
+                {"op": "mean", "field": "range", "as": "rbar"}
+              ]
+            },
+            {
+              "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
+              "as": "a2"
+            },
+            {"calculate": "datum.grandxbar - (datum.a2 * datum.rbar)", "as": "lcl"},
+            {"aggregate": [{"op": "max", "field": "lcl", "as": "lcl_val"}]}
+          ],
+          "layer": [
+            {
+              "mark": {"type": "rule", "strokeDash": [8, 4], "color": "#e67e22", "strokeWidth": 2},
+              "encoding": {"x": {"field": "lcl_val", "type": "quantitative"}}
+            },
+            {
+              "mark": {"type": "text", "dy": -15, "fontSize": 10, "fontWeight": "600", "color": "#e67e22"},
+              "encoding": {
+                "x": {"field": "lcl_val", "type": "quantitative"},
+                "y": {"value": 0},
+                "text": {"value": "LCL"}
+              }
+            }
+          ]
+        }
+      ]
     }
-  ]
+  ],
+  "config": {
+    "view": {"stroke": null},
+    "axis": {
+      "domainColor": "#95a5a6",
+      "tickColor": "#95a5a6"
+    },
+    "concat": {"spacing": 15}
+  }
 }
