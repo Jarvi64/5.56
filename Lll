@@ -1,0 +1,127 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Process Capability Histogram - Simple",
+  "autosize": {
+    "type": "fit",
+    "contains": "padding"
+  },
+  "width": "container",
+  "height": "container",
+  "data": {"name": "dataset"},
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "color": "#4682B4",
+        "opacity": 0.7
+      },
+      "encoding": {
+        "x": {
+          "bin": {"maxbins": 30},
+          "field": "measuredvalue",
+          "type": "quantitative",
+          "title": "Measured Value"
+        },
+        "y": {
+          "aggregate": "count",
+          "type": "quantitative",
+          "title": "Frequency"
+        }
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {
+          "aggregate": [
+            {"op": "mean", "field": "measuredvalue", "as": "mean"},
+            {"op": "stdev", "field": "measuredvalue", "as": "stdev"},
+            {"op": "count", "as": "total_count"}
+          ]
+        },
+        {"calculate": "datum.mean - 4 * datum.stdev", "as": "x_min"},
+        {"calculate": "datum.mean + 4 * datum.stdev", "as": "x_max"},
+        {"calculate": "sequence(datum.x_min, datum.x_max, (datum.x_max - datum.x_min) / 100)", "as": "x_seq"},
+        {"flatten": ["x_seq"]},
+        {"calculate": "datum.x_seq", "as": "x"},
+        {
+          "calculate": "(1 / (datum.stdev * sqrt(2 * PI))) * exp(-0.5 * pow((datum.x - datum.mean) / datum.stdev, 2))",
+          "as": "density"
+        },
+        {
+          "calculate": "datum.density * datum.total_count * ((datum.x_max - datum.x_min) / 30)",
+          "as": "y"
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "color": "red",
+        "strokeWidth": 2.5
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "mean", "field": "measuredvalue", "as": "mean_value"}]}
+      ],
+      "mark": {
+        "type": "rule",
+        "strokeDash": [5, 5],
+        "color": "green",
+        "strokeWidth": 2
+      },
+      "encoding": {
+        "x": {
+          "field": "mean_value",
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "max", "field": "Latest LSL", "as": "lsl_value"}]}
+      ],
+      "mark": {
+        "type": "rule",
+        "strokeDash": [5, 5],
+        "color": "red",
+        "strokeWidth": 2
+      },
+      "encoding": {
+        "x": {
+          "field": "lsl_value",
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "max", "field": "Latest USL", "as": "usl_value"}]}
+      ],
+      "mark": {
+        "type": "rule",
+        "strokeDash": [5, 5],
+        "color": "red",
+        "strokeWidth": 2
+      },
+      "encoding": {
+        "x": {
+          "field": "usl_value",
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+}
