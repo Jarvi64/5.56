@@ -1,138 +1,2297 @@
 {
-  "data": {"name": "dataset"},
-  "spacing": 15,
-  "transform": [
-    {
-      "calculate": "datum.measuredvalue",
-      "as": "val"
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "Process Capability Analysis",
+    "background": "#ffffff",
+    "padding": 15,
+    "data": {
+        "name": "dataset"
     },
-    {
-      "joinaggregate": [
-        {"op": "mean", "field": "val", "as": "global_mean"},
-        {"op": "min", "field": "lowerlimit", "as": "LSL"},
-        {"op": "max", "field": "upperlimit", "as": "USL"},
-        {"op": "max", "field": "a2", "as": "A2_val"}
-      ]
-    },
-    {
-      "window": [{"op": "count", "as": "total_samples"}]
-    },
-    {
-      "joinaggregate": [
-        {"op": "mean", "field": "val", "as": "lot_mean"},
-        {"op": "min", "field": "val", "as": "lot_min"},
-        {"op": "max", "field": "val", "as": "lot_max"}
-      ],
-      "groupby": ["lot_breaker_id"]
-    },
-    {
-      "calculate": "datum.lot_max - datum.lot_min",
-      "as": "lot_R"
-    },
-    {
-      "joinaggregate": [
-        {"op": "mean", "field": "lot_mean", "as": "grand_x_bar"},
-        {"op": "mean", "field": "lot_R", "as": "r_bar"}
-      ]
-    },
-    {
-      "calculate": "datum.grand_x_bar + (datum.A2_val * datum.r_bar)",
-      "as": "UCL"
-    },
-    {
-      "calculate": "datum.grand_x_bar - (datum.A2_val * datum.r_bar)",
-      "as": "LCL"
-    }
-  ],
-  "vconcat": [
-    {
-      "name": "HEADER_INFO",
-      "width": 600,
-      "height": 50,
-      "layer": [
+    "vconcat": [
         {
-          "mark": {
-            "type": "rect",
-            "cornerRadius": 4,
-            "fill": "#333",
-            "fillOpacity": 0.05
-          }
-        },
-        {
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 10,
-            "fontSize": 14,
-            "fontWeight": "bold"
-          },
-          "encoding": {
-            "text": {"field": "cleanname", "type": "nominal"}
-          }
-        }
-      ]
-    },
-    {
-      "width": 600,
-      "height": 300,
-      "layer": [
-        {
-          "mark": {"type": "bar", "color": "#7bb4eb", "opacity": 0.6},
-          "encoding": {
-            "x": {
-              "field": "val",
-              "type": "quantitative",
-              "bin": {"maxbins": 40},
-              "title": "Measured Value"
+            "width": "container",
+            "height": 50,
+            "data": {
+                "name": "dataset"
             },
-            "y": {"aggregate": "count", "type": "quantitative", "title": "Sample Count"}
-          }
+            "transform": [
+                {
+                    "aggregate": [
+                        {
+                            "op": "max",
+                            "field": "cleanname",
+                            "as": "variant"
+                        }
+                    ]
+                }
+            ],
+            "layer": [
+                {
+                    "mark": {
+                        "type": "rect",
+                        "fill": "#0f172a",
+                        "cornerRadius": 10
+                    },
+                    "encoding": {
+                        "x": {
+                            "value": 0
+                        },
+                        "x2": {
+                            "signal": "width"
+                        },
+                        "y": {
+                            "value": 0
+                        },
+                        "y2": {
+                            "value": 50
+                        }
+                    }
+                },
+                {
+                    "mark": {
+                        "type": "text",
+                        "fontSize": 20,
+                        "fontWeight": "bold",
+                        "color": "#ffffff",
+                        "align": "left",
+                        "baseline": "middle"
+                    },
+                    "encoding": {
+                        "x": {
+                            "value": 25
+                        },
+                        "y": {
+                            "value": 25
+                        },
+                        "text": {
+                            "value": "Process Capability Analysis"
+                        }
+                    }
+                },
+                {
+                    "mark": {
+                        "type": "text",
+                        "fontSize": 14,
+                        "color": "#94a3b8",
+                        "align": "right",
+                        "baseline": "middle"
+                    },
+                    "encoding": {
+                        "x": {
+                            "signal": "width - 20"
+                        },
+                        "y": {
+                            "value": 25
+                        },
+                        "text": {
+                            "field": "variant"
+                        }
+                    }
+                }
+            ]
         },
         {
-          "transform": [{"density": "val"}],
-          "mark": {"type": "line", "color": "#1f4e79", "strokeWidth": 2},
-          "encoding": {
-            "x": {"field": "value", "type": "quantitative"},
-            "y": {"field": "density", "type": "quantitative", "axis": null}
-          }
-        },
-        {
-          "mark": {"type": "rule", "color": "#d9534f", "strokeDash": [5, 3], "size": 2},
-          "encoding": {"x": {"field": "LSL", "type": "quantitative"}}
-        },
-        {
-          "mark": {"type": "rule", "color": "#d9534f", "strokeDash": [5, 3], "size": 2},
-          "encoding": {"x": {"field": "USL", "type": "quantitative"}}
-        },
-        {
-          "mark": {"type": "rule", "color": "#5bc0de", "size": 1.5},
-          "encoding": {"x": {"field": "LCL", "type": "quantitative"}}
-        },
-        {
-          "mark": {"type": "rule", "color": "#5bc0de", "size": 1.5},
-          "encoding": {"x": {"field": "UCL", "type": "quantitative"}}
-        },
-        {
-          "mark": {"type": "text", "align": "right", "dx": -5, "dy": 10, "color": "#d9534f", "fontWeight": "bold"},
-          "encoding": {
-            "x": {"field": "LSL", "type": "quantitative"},
-            "y": {"value": 0},
-            "text": {"value": "LSL"}
-          }
-        },
-        {
-          "mark": {"type": "text", "align": "left", "dx": 5, "dy": 10, "color": "#d9534f", "fontWeight": "bold"},
-          "encoding": {
-            "x": {"field": "USL", "type": "quantitative"},
-            "y": {"value": 0},
-            "text": {"value": "USL"}
-          }
+            "hconcat": [
+                {
+                    "width": 280,
+                    "height": 520,
+                    "data": {
+                        "name": "dataset"
+                    },
+                    "transform": [
+                        {
+                            "aggregate": [
+                                {
+                                    "op": "mean",
+                                    "field": "measuredvalue",
+                                    "as": "xbar"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "measuredvalue",
+                                    "as": "max_val"
+                                },
+                                {
+                                    "op": "min",
+                                    "field": "measuredvalue",
+                                    "as": "min_val"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "sampleqty",
+                                    "as": "n"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "upperlimit",
+                                    "as": "usl"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "lowerlimit",
+                                    "as": "lsl"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "nominallimit",
+                                    "as": "nominal"
+                                },
+                                {
+                                    "op": "count",
+                                    "as": "samples_in_lot"
+                                }
+                            ],
+                            "groupby": [
+                                "lot_breaker_id"
+                            ]
+                        },
+                        {
+                            "calculate": "datum.max_val - datum.min_val",
+                            "as": "range"
+                        },
+                        {
+                            "joinaggregate": [
+                                {
+                                    "op": "mean",
+                                    "field": "xbar",
+                                    "as": "grandxbar"
+                                },
+                                {
+                                    "op": "mean",
+                                    "field": "range",
+                                    "as": "rbar"
+                                },
+                                {
+                                    "op": "count",
+                                    "as": "num_lots"
+                                },
+                                {
+                                    "op": "sum",
+                                    "field": "samples_in_lot",
+                                    "as": "total_samples"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "max_val",
+                                    "as": "overall_max"
+                                },
+                                {
+                                    "op": "min",
+                                    "field": "min_val",
+                                    "as": "overall_min"
+                                }
+                            ]
+                        },
+                        {
+                            "calculate": "datum.n == 2 ? 1.128 : datum.n == 3 ? 1.693 : datum.n == 4 ? 2.059 : datum.n == 5 ? 2.326 : datum.n == 6 ? 2.534 : datum.n == 7 ? 2.704 : datum.n == 8 ? 2.847 : datum.n == 9 ? 2.970 : datum.n == 10 ? 3.078 : 2.326",
+                            "as": "d2"
+                        },
+                        {
+                            "calculate": "datum.rbar / datum.d2",
+                            "as": "sigma"
+                        },
+                        {
+                            "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
+                            "as": "a2"
+                        },
+                        {
+                            "calculate": "datum.grandxbar + (datum.a2 * datum.rbar)",
+                            "as": "ucl"
+                        },
+                        {
+                            "calculate": "datum.grandxbar - (datum.a2 * datum.rbar)",
+                            "as": "lcl"
+                        },
+                        {
+                            "calculate": "datum.grandxbar + (3 * datum.sigma)",
+                            "as": "plus3sigma"
+                        },
+                        {
+                            "calculate": "datum.grandxbar - (3 * datum.sigma)",
+                            "as": "minus3sigma"
+                        },
+                        {
+                            "calculate": "(datum.usl - datum.lsl) / (6 * datum.sigma)",
+                            "as": "cp"
+                        },
+                        {
+                            "calculate": "min((datum.usl - datum.grandxbar) / (3 * datum.sigma), (datum.grandxbar - datum.lsl) / (3 * datum.sigma))",
+                            "as": "cpk"
+                        },
+                        {
+                            "aggregate": [
+                                {
+                                    "op": "max",
+                                    "field": "n",
+                                    "as": "n"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "total_samples",
+                                    "as": "total"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "num_lots",
+                                    "as": "lots"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "overall_max",
+                                    "as": "max"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "overall_min",
+                                    "as": "min"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "grandxbar",
+                                    "as": "mean"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "sigma",
+                                    "as": "sigma"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "lsl",
+                                    "as": "lsl"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "usl",
+                                    "as": "usl"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "nominal",
+                                    "as": "nominal"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "lcl",
+                                    "as": "lcl"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "ucl",
+                                    "as": "ucl"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "plus3sigma",
+                                    "as": "plus3sigma"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "minus3sigma",
+                                    "as": "minus3sigma"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "cp",
+                                    "as": "cp"
+                                },
+                                {
+                                    "op": "max",
+                                    "field": "cpk",
+                                    "as": "cpk"
+                                }
+                            ]
+                        }
+                    ],
+                    "layer": [
+                        {
+                            "mark": {
+                                "type": "rect",
+                                "fill": "#f8fafc",
+                                "stroke": "#e2e8f0",
+                                "strokeWidth": 1,
+                                "cornerRadius": 10
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 0
+                                },
+                                "x2": {
+                                    "value": 280
+                                },
+                                "y": {
+                                    "value": 0
+                                },
+                                "y2": {
+                                    "value": 520
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "rect",
+                                "fill": "#1e40af",
+                                "cornerRadiusTopLeft": 10,
+                                "cornerRadiusTopRight": 10
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 0
+                                },
+                                "x2": {
+                                    "value": 280
+                                },
+                                "y": {
+                                    "value": 0
+                                },
+                                "y2": {
+                                    "value": 26
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "bold",
+                                "color": "#ffffff",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 16
+                                },
+                                "text": {
+                                    "value": "Basic Statistics"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 42
+                                },
+                                "text": {
+                                    "value": "Sample Size (n)"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#1e293b",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 42
+                                },
+                                "text": {
+                                    "field": "n"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 58
+                                },
+                                "text": {
+                                    "value": "Total Samples"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#1e293b",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 58
+                                },
+                                "text": {
+                                    "field": "total"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 74
+                                },
+                                "text": {
+                                    "value": "No. of Lots"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#1e293b",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 74
+                                },
+                                "text": {
+                                    "field": "lots"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 90
+                                },
+                                "text": {
+                                    "value": "Maximum"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#1e293b",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 90
+                                },
+                                "text": {
+                                    "field": "max",
+                                    "format": ".4f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 106
+                                },
+                                "text": {
+                                    "value": "Minimum"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#1e293b",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 106
+                                },
+                                "text": {
+                                    "field": "min",
+                                    "format": ".4f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 122
+                                },
+                                "text": {
+                                    "value": "Mean (X̄̄)"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#1e293b",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 122
+                                },
+                                "text": {
+                                    "field": "mean",
+                                    "format": ".4f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 138
+                                },
+                                "text": {
+                                    "value": "Sigma (σ = R̄/d₂)"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#1e293b",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 138
+                                },
+                                "text": {
+                                    "field": "sigma",
+                                    "format": ".5f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "rect",
+                                "fill": "#dc2626"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 0
+                                },
+                                "x2": {
+                                    "value": 280
+                                },
+                                "y": {
+                                    "value": 152
+                                },
+                                "y2": {
+                                    "value": 178
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "bold",
+                                "color": "#ffffff",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 168
+                                },
+                                "text": {
+                                    "value": "Specification Limits"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 196
+                                },
+                                "text": {
+                                    "value": "Upper Spec (USL)"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#dc2626",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 196
+                                },
+                                "text": {
+                                    "field": "usl",
+                                    "format": ".3f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 212
+                                },
+                                "text": {
+                                    "value": "Nominal"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#7c3aed",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 212
+                                },
+                                "text": {
+                                    "field": "nominal",
+                                    "format": ".3f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 228
+                                },
+                                "text": {
+                                    "value": "Lower Spec (LSL)"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#dc2626",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 228
+                                },
+                                "text": {
+                                    "field": "lsl",
+                                    "format": ".3f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "rect",
+                                "fill": "#ea580c"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 0
+                                },
+                                "x2": {
+                                    "value": 280
+                                },
+                                "y": {
+                                    "value": 242
+                                },
+                                "y2": {
+                                    "value": 268
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "bold",
+                                "color": "#ffffff",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 258
+                                },
+                                "text": {
+                                    "value": "Control Limits"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 286
+                                },
+                                "text": {
+                                    "value": "UCL (X̄̄ + A₂R̄)"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#ea580c",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 286
+                                },
+                                "text": {
+                                    "field": "ucl",
+                                    "format": ".4f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 302
+                                },
+                                "text": {
+                                    "value": "LCL (X̄̄ - A₂R̄)"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#ea580c",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 302
+                                },
+                                "text": {
+                                    "field": "lcl",
+                                    "format": ".4f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 318
+                                },
+                                "text": {
+                                    "value": "+3σ"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#0d9488",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 318
+                                },
+                                "text": {
+                                    "field": "plus3sigma",
+                                    "format": ".4f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 334
+                                },
+                                "text": {
+                                    "value": "-3σ"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "600",
+                                "color": "#0d9488",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 334
+                                },
+                                "text": {
+                                    "field": "minus3sigma",
+                                    "format": ".4f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "rect",
+                                "fill": "#7c3aed"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 0
+                                },
+                                "x2": {
+                                    "value": 280
+                                },
+                                "y": {
+                                    "value": 348
+                                },
+                                "y2": {
+                                    "value": 374
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "bold",
+                                "color": "#ffffff",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 364
+                                },
+                                "text": {
+                                    "value": "Out of Spec"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 392
+                                },
+                                "text": {
+                                    "value": "Above USL"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 408
+                                },
+                                "text": {
+                                    "value": "Below LSL"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 424
+                                },
+                                "text": {
+                                    "value": "Total OOS"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "rect",
+                                "fill": "#16a34a"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 0
+                                },
+                                "x2": {
+                                    "value": 280
+                                },
+                                "y": {
+                                    "value": 438
+                                },
+                                "y2": {
+                                    "value": 464
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 11,
+                                "fontWeight": "bold",
+                                "color": "#ffffff",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 454
+                                },
+                                "text": {
+                                    "value": "Capability Indices"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 482
+                                },
+                                "text": {
+                                    "value": "Cp (USL-LSL)/6σ"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 13,
+                                "fontWeight": "bold",
+                                "color": "#16a34a",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 482
+                                },
+                                "text": {
+                                    "field": "cp",
+                                    "format": ".3f"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 10,
+                                "color": "#64748b",
+                                "align": "left"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 12
+                                },
+                                "y": {
+                                    "value": 500
+                                },
+                                "text": {
+                                    "value": "Cpk min(Cpu, Cpl)"
+                                }
+                            }
+                        },
+                        {
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 13,
+                                "fontWeight": "bold",
+                                "color": "#16a34a",
+                                "align": "right"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 268
+                                },
+                                "y": {
+                                    "value": 500
+                                },
+                                "text": {
+                                    "field": "cpk",
+                                    "format": ".3f"
+                                }
+                            }
+                        },
+                        {
+                            "transform": [
+                                {
+                                    "calculate": "datum.cpk >= 1.33 ? 'CAPABLE' : datum.cpk >= 1.0 ? 'MARGINAL' : 'NOT CAPABLE'",
+                                    "as": "status"
+                                },
+                                {
+                                    "calculate": "datum.cpk >= 1.33 ? '#10b981' : datum.cpk >= 1.0 ? '#f59e0b' : '#ef4444'",
+                                    "as": "status_color"
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "rect",
+                                        "cornerRadius": 6
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "value": 180
+                                        },
+                                        "x2": {
+                                            "value": 268
+                                        },
+                                        "y": {
+                                            "value": 467
+                                        },
+                                        "y2": {
+                                            "value": 487
+                                        },
+                                        "fill": {
+                                            "field": "status_color",
+                                            "type": "nominal",
+                                            "scale": null
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 9,
+                                        "fontWeight": "bold",
+                                        "color": "#ffffff",
+                                        "align": "center"
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "value": 224
+                                        },
+                                        "y": {
+                                            "value": 480
+                                        },
+                                        "text": {
+                                            "field": "status"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "width": 650,
+                    "height": 520,
+                    "data": {
+                        "name": "dataset"
+                    },
+                    "layer": [
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "joinaggregate": [
+                                        {
+                                            "op": "max",
+                                            "field": "upperlimit",
+                                            "as": "usl"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "lowerlimit",
+                                            "as": "lsl"
+                                        },
+                                        {
+                                            "op": "count",
+                                            "as": "total_count"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.measuredvalue > datum.usl ? 1 : 0",
+                                    "as": "above"
+                                },
+                                {
+                                    "calculate": "datum.measuredvalue < datum.lsl ? 1 : 0",
+                                    "as": "below"
+                                },
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "sum",
+                                            "field": "above",
+                                            "as": "above_count"
+                                        },
+                                        {
+                                            "op": "sum",
+                                            "field": "below",
+                                            "as": "below_count"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "total_count",
+                                            "as": "total"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "calculate": "(datum.above_count / datum.total) * 100",
+                                    "as": "above_pct"
+                                },
+                                {
+                                    "calculate": "(datum.below_count / datum.total) * 100",
+                                    "as": "below_pct"
+                                },
+                                {
+                                    "calculate": "((datum.above_count + datum.below_count) / datum.total) * 100",
+                                    "as": "total_pct"
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 11,
+                                        "fontWeight": "600",
+                                        "color": "#7c3aed",
+                                        "align": "right"
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "value": -52
+                                        },
+                                        "y": {
+                                            "value": 352
+                                        },
+                                        "text": {
+                                            "field": "above_pct",
+                                            "format": ".2f"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 10,
+                                        "color": "#7c3aed",
+                                        "align": "left"
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "value": -48
+                                        },
+                                        "y": {
+                                            "value": 352
+                                        },
+                                        "text": {
+                                            "value": "%"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 11,
+                                        "fontWeight": "600",
+                                        "color": "#7c3aed",
+                                        "align": "right"
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "value": -52
+                                        },
+                                        "y": {
+                                            "value": 368
+                                        },
+                                        "text": {
+                                            "field": "below_pct",
+                                            "format": ".2f"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 10,
+                                        "color": "#7c3aed",
+                                        "align": "left"
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "value": -48
+                                        },
+                                        "y": {
+                                            "value": 368
+                                        },
+                                        "text": {
+                                            "value": "%"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 11,
+                                        "fontWeight": "bold",
+                                        "color": "#7c3aed",
+                                        "align": "right"
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "value": -52
+                                        },
+                                        "y": {
+                                            "value": 384
+                                        },
+                                        "text": {
+                                            "field": "total_pct",
+                                            "format": ".2f"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 10,
+                                        "color": "#7c3aed",
+                                        "align": "left"
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "value": -48
+                                        },
+                                        "y": {
+                                            "value": 384
+                                        },
+                                        "text": {
+                                            "value": "%"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "mark": {
+                                "type": "bar",
+                                "cornerRadiusTopLeft": 2,
+                                "cornerRadiusTopRight": 2
+                            },
+                            "encoding": {
+                                "x": {
+                                    "bin": {
+                                        "maxbins": 20
+                                    },
+                                    "field": "measuredvalue",
+                                    "type": "quantitative",
+                                    "title": "Measured Value",
+                                    "axis": {
+                                        "labelFontSize": 11,
+                                        "titleFontSize": 13,
+                                        "titleFontWeight": 600,
+                                        "labelAngle": -45,
+                                        "format": ".2f",
+                                        "grid": false
+                                    }
+                                },
+                                "y": {
+                                    "aggregate": "count",
+                                    "type": "quantitative",
+                                    "title": "Frequency",
+                                    "axis": {
+                                        "labelFontSize": 11,
+                                        "titleFontSize": 13,
+                                        "titleFontWeight": 600,
+                                        "grid": true,
+                                        "gridOpacity": 0.2
+                                    }
+                                },
+                                "color": {
+                                    "value": "#60a5fa"
+                                },
+                                "stroke": {
+                                    "value": "#3b82f6"
+                                },
+                                "strokeWidth": {
+                                    "value": 1
+                                },
+                                "tooltip": [
+                                    {
+                                        "bin": true,
+                                        "field": "measuredvalue",
+                                        "type": "quantitative",
+                                        "title": "Range",
+                                        "format": ".4f"
+                                    },
+                                    {
+                                        "aggregate": "count",
+                                        "type": "quantitative",
+                                        "title": "Frequency"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "measuredvalue",
+                                            "as": "mean"
+                                        },
+                                        {
+                                            "op": "stdev",
+                                            "field": "measuredvalue",
+                                            "as": "stdev"
+                                        },
+                                        {
+                                            "op": "count",
+                                            "as": "total_count"
+                                        },
+                                        {
+                                            "op": "min",
+                                            "field": "measuredvalue",
+                                            "as": "data_min"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "measuredvalue",
+                                            "as": "data_max"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.mean - 4 * datum.stdev",
+                                    "as": "x_min"
+                                },
+                                {
+                                    "calculate": "datum.mean + 4 * datum.stdev",
+                                    "as": "x_max"
+                                },
+                                {
+                                    "calculate": "(datum.data_max - datum.data_min) / 20",
+                                    "as": "bin_width"
+                                },
+                                {
+                                    "calculate": "sequence(datum.x_min, datum.x_max, (datum.x_max - datum.x_min) / 150)",
+                                    "as": "x_seq"
+                                },
+                                {
+                                    "flatten": [
+                                        "x_seq"
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.x_seq",
+                                    "as": "x"
+                                },
+                                {
+                                    "calculate": "(1 / (datum.stdev * sqrt(2 * PI))) * exp(-0.5 * pow((datum.x - datum.mean) / datum.stdev, 2))",
+                                    "as": "density"
+                                },
+                                {
+                                    "calculate": "datum.density * datum.total_count * datum.bin_width",
+                                    "as": "y"
+                                }
+                            ],
+                            "mark": {
+                                "type": "line",
+                                "color": "#1e293b",
+                                "strokeWidth": 2.5
+                            },
+                            "encoding": {
+                                "x": {
+                                    "field": "x",
+                                    "type": "quantitative"
+                                },
+                                "y": {
+                                    "field": "y",
+                                    "type": "quantitative"
+                                }
+                            }
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "measuredvalue",
+                                            "as": "xbar"
+                                        }
+                                    ],
+                                    "groupby": [
+                                        "lot_breaker_id"
+                                    ]
+                                },
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "xbar",
+                                            "as": "grandxbar"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "rule",
+                                        "color": "#1e293b",
+                                        "strokeWidth": 2
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "grandxbar",
+                                            "type": "quantitative"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 11,
+                                        "fontWeight": "600",
+                                        "color": "#1e293b",
+                                        "align": "center",
+                                        "baseline": "bottom",
+                                        "dy": -5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "grandxbar",
+                                            "type": "quantitative"
+                                        },
+                                        "y": {
+                                            "value": 0
+                                        },
+                                        "text": {
+                                            "value": "Mean"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "max",
+                                            "field": "lowerlimit",
+                                            "as": "lsl"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "rule",
+                                        "color": "#dc2626",
+                                        "strokeWidth": 2.5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "lsl",
+                                            "type": "quantitative"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 11,
+                                        "fontWeight": "600",
+                                        "color": "#dc2626",
+                                        "align": "center",
+                                        "baseline": "bottom",
+                                        "dy": -5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "lsl",
+                                            "type": "quantitative"
+                                        },
+                                        "y": {
+                                            "value": 0
+                                        },
+                                        "text": {
+                                            "value": "LSL"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "max",
+                                            "field": "upperlimit",
+                                            "as": "usl"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "rule",
+                                        "color": "#dc2626",
+                                        "strokeWidth": 2.5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "usl",
+                                            "type": "quantitative"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 11,
+                                        "fontWeight": "600",
+                                        "color": "#dc2626",
+                                        "align": "center",
+                                        "baseline": "bottom",
+                                        "dy": -5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "usl",
+                                            "type": "quantitative"
+                                        },
+                                        "y": {
+                                            "value": 0
+                                        },
+                                        "text": {
+                                            "value": "USL"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "measuredvalue",
+                                            "as": "xbar"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "measuredvalue",
+                                            "as": "max_val"
+                                        },
+                                        {
+                                            "op": "min",
+                                            "field": "measuredvalue",
+                                            "as": "min_val"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "sampleqty",
+                                            "as": "n"
+                                        }
+                                    ],
+                                    "groupby": [
+                                        "lot_breaker_id"
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.max_val - datum.min_val",
+                                    "as": "range"
+                                },
+                                {
+                                    "joinaggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "xbar",
+                                            "as": "grandxbar"
+                                        },
+                                        {
+                                            "op": "mean",
+                                            "field": "range",
+                                            "as": "rbar"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
+                                    "as": "a2"
+                                },
+                                {
+                                    "calculate": "datum.grandxbar + (datum.a2 * datum.rbar)",
+                                    "as": "ucl"
+                                },
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "max",
+                                            "field": "ucl",
+                                            "as": "ucl_val"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "rule",
+                                        "strokeDash": [
+                                            8,
+                                            4
+                                        ],
+                                        "color": "#ea580c",
+                                        "strokeWidth": 2
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "ucl_val",
+                                            "type": "quantitative"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 10,
+                                        "fontWeight": "600",
+                                        "color": "#ea580c",
+                                        "align": "center",
+                                        "baseline": "bottom",
+                                        "dy": -5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "ucl_val",
+                                            "type": "quantitative"
+                                        },
+                                        "y": {
+                                            "value": 0
+                                        },
+                                        "text": {
+                                            "value": "UCL"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "measuredvalue",
+                                            "as": "xbar"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "measuredvalue",
+                                            "as": "max_val"
+                                        },
+                                        {
+                                            "op": "min",
+                                            "field": "measuredvalue",
+                                            "as": "min_val"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "sampleqty",
+                                            "as": "n"
+                                        }
+                                    ],
+                                    "groupby": [
+                                        "lot_breaker_id"
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.max_val - datum.min_val",
+                                    "as": "range"
+                                },
+                                {
+                                    "joinaggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "xbar",
+                                            "as": "grandxbar"
+                                        },
+                                        {
+                                            "op": "mean",
+                                            "field": "range",
+                                            "as": "rbar"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.n == 2 ? 1.880 : datum.n == 3 ? 1.023 : datum.n == 4 ? 0.729 : datum.n == 5 ? 0.577 : datum.n == 6 ? 0.483 : datum.n == 7 ? 0.419 : datum.n == 8 ? 0.373 : datum.n == 9 ? 0.337 : datum.n == 10 ? 0.308 : 0.577",
+                                    "as": "a2"
+                                },
+                                {
+                                    "calculate": "datum.grandxbar - (datum.a2 * datum.rbar)",
+                                    "as": "lcl"
+                                },
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "max",
+                                            "field": "lcl",
+                                            "as": "lcl_val"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "rule",
+                                        "strokeDash": [
+                                            8,
+                                            4
+                                        ],
+                                        "color": "#ea580c",
+                                        "strokeWidth": 2
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "lcl_val",
+                                            "type": "quantitative"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 10,
+                                        "fontWeight": "600",
+                                        "color": "#ea580c",
+                                        "align": "center",
+                                        "baseline": "bottom",
+                                        "dy": -5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "lcl_val",
+                                            "type": "quantitative"
+                                        },
+                                        "y": {
+                                            "value": 0
+                                        },
+                                        "text": {
+                                            "value": "LCL"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "measuredvalue",
+                                            "as": "xbar"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "measuredvalue",
+                                            "as": "max_val"
+                                        },
+                                        {
+                                            "op": "min",
+                                            "field": "measuredvalue",
+                                            "as": "min_val"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "sampleqty",
+                                            "as": "n"
+                                        }
+                                    ],
+                                    "groupby": [
+                                        "lot_breaker_id"
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.max_val - datum.min_val",
+                                    "as": "range"
+                                },
+                                {
+                                    "joinaggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "xbar",
+                                            "as": "grandxbar"
+                                        },
+                                        {
+                                            "op": "mean",
+                                            "field": "range",
+                                            "as": "rbar"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.n == 2 ? 1.128 : datum.n == 3 ? 1.693 : datum.n == 4 ? 2.059 : datum.n == 5 ? 2.326 : datum.n == 6 ? 2.534 : datum.n == 7 ? 2.704 : datum.n == 8 ? 2.847 : datum.n == 9 ? 2.970 : datum.n == 10 ? 3.078 : 2.326",
+                                    "as": "d2"
+                                },
+                                {
+                                    "calculate": "datum.rbar / datum.d2",
+                                    "as": "sigma"
+                                },
+                                {
+                                    "calculate": "datum.grandxbar + (3 * datum.sigma)",
+                                    "as": "plus3sigma"
+                                },
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "max",
+                                            "field": "plus3sigma",
+                                            "as": "p3s"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "rule",
+                                        "strokeDash": [
+                                            4,
+                                            4
+                                        ],
+                                        "color": "#0d9488",
+                                        "strokeWidth": 1.5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "p3s",
+                                            "type": "quantitative"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 10,
+                                        "fontWeight": "500",
+                                        "color": "#0d9488",
+                                        "align": "center",
+                                        "baseline": "bottom",
+                                        "dy": -5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "p3s",
+                                            "type": "quantitative"
+                                        },
+                                        "y": {
+                                            "value": 0
+                                        },
+                                        "text": {
+                                            "value": "+3σ"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "measuredvalue",
+                                            "as": "xbar"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "measuredvalue",
+                                            "as": "max_val"
+                                        },
+                                        {
+                                            "op": "min",
+                                            "field": "measuredvalue",
+                                            "as": "min_val"
+                                        },
+                                        {
+                                            "op": "max",
+                                            "field": "sampleqty",
+                                            "as": "n"
+                                        }
+                                    ],
+                                    "groupby": [
+                                        "lot_breaker_id"
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.max_val - datum.min_val",
+                                    "as": "range"
+                                },
+                                {
+                                    "joinaggregate": [
+                                        {
+                                            "op": "mean",
+                                            "field": "xbar",
+                                            "as": "grandxbar"
+                                        },
+                                        {
+                                            "op": "mean",
+                                            "field": "range",
+                                            "as": "rbar"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "calculate": "datum.n == 2 ? 1.128 : datum.n == 3 ? 1.693 : datum.n == 4 ? 2.059 : datum.n == 5 ? 2.326 : datum.n == 6 ? 2.534 : datum.n == 7 ? 2.704 : datum.n == 8 ? 2.847 : datum.n == 9 ? 2.970 : datum.n == 10 ? 3.078 : 2.326",
+                                    "as": "d2"
+                                },
+                                {
+                                    "calculate": "datum.rbar / datum.d2",
+                                    "as": "sigma"
+                                },
+                                {
+                                    "calculate": "datum.grandxbar - (3 * datum.sigma)",
+                                    "as": "minus3sigma"
+                                },
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "max",
+                                            "field": "minus3sigma",
+                                            "as": "m3s"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "rule",
+                                        "strokeDash": [
+                                            4,
+                                            4
+                                        ],
+                                        "color": "#0d9488",
+                                        "strokeWidth": 1.5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "m3s",
+                                            "type": "quantitative"
+                                        }
+                                    }
+                                },
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "fontSize": 10,
+                                        "fontWeight": "500",
+                                        "color": "#0d9488",
+                                        "align": "center",
+                                        "baseline": "bottom",
+                                        "dy": -5
+                                    },
+                                    "encoding": {
+                                        "x": {
+                                            "field": "m3s",
+                                            "type": "quantitative"
+                                        },
+                                        "y": {
+                                            "value": 0
+                                        },
+                                        "text": {
+                                            "value": "-3σ"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "data": {
+                                "name": "dataset"
+                            },
+                            "transform": [
+                                {
+                                    "aggregate": [
+                                        {
+                                            "op": "count",
+                                            "as": "dummy"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "mark": {
+                                "type": "text",
+                                "fontSize": 16,
+                                "fontWeight": "bold",
+                                "color": "#1e293b",
+                                "align": "center"
+                            },
+                            "encoding": {
+                                "x": {
+                                    "value": 325
+                                },
+                                "y": {
+                                    "value": -15
+                                },
+                                "text": {
+                                    "value": "Histogram"
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
         }
-      ]
+    ],
+    "config": {
+        "view": {
+            "stroke": null
+        },
+        "concat": {
+            "spacing": 20
+        },
+        "title": {
+            "offset": 15
+        }
     }
-  ],
-  "config": {
-    "axis": {"grid": false},
-    "view": {"stroke": null}
-  }
 }
