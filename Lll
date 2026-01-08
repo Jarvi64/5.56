@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "description": "Process Capability Histogram - Simple",
+  "description": "Process Capability Histogram",
   "autosize": {
     "type": "fit",
     "contains": "padding"
@@ -26,7 +26,11 @@
           "aggregate": "count",
           "type": "quantitative",
           "title": "Frequency"
-        }
+        },
+        "tooltip": [
+          {"bin": true, "field": "measuredvalue", "type": "quantitative", "title": "Range"},
+          {"aggregate": "count", "type": "quantitative", "title": "Frequency"}
+        ]
       }
     },
     {
@@ -66,7 +70,11 @@
         "y": {
           "field": "y",
           "type": "quantitative"
-        }
+        },
+        "tooltip": [
+          {"field": "mean", "type": "quantitative", "title": "Mean", "format": ".4f"},
+          {"field": "stdev", "type": "quantitative", "title": "Std Dev", "format": ".4f"}
+        ]
       }
     },
     {
@@ -84,7 +92,52 @@
         "x": {
           "field": "mean_value",
           "type": "quantitative"
-        }
+        },
+        "tooltip": [
+          {"field": "mean_value", "type": "quantitative", "title": "Mean", "format": ".4f"}
+        ]
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "mean", "field": "measuredvalue", "as": "mean_value"}]}
+      ],
+      "mark": {
+        "type": "text",
+        "dy": -10,
+        "fontSize": 12,
+        "fontWeight": "bold",
+        "color": "green"
+      },
+      "encoding": {
+        "x": {
+          "field": "mean_value",
+          "type": "quantitative"
+        },
+        "y": {"value": 0},
+        "text": {"field": "mean_value", "type": "quantitative", "format": ".3f"}
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "mean", "field": "measuredvalue", "as": "mean_value"}]}
+      ],
+      "mark": {
+        "type": "text",
+        "dy": -25,
+        "fontSize": 11,
+        "fontWeight": "600",
+        "color": "green"
+      },
+      "encoding": {
+        "x": {
+          "field": "mean_value",
+          "type": "quantitative"
+        },
+        "y": {"value": 0},
+        "text": {"value": "Mean"}
       }
     },
     {
@@ -102,7 +155,54 @@
         "x": {
           "field": "lsl_value",
           "type": "quantitative"
-        }
+        },
+        "tooltip": [
+          {"field": "lsl_value", "type": "quantitative", "title": "LSL", "format": ".4f"}
+        ]
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "max", "field": "Latest LSL", "as": "lsl_value"}]}
+      ],
+      "mark": {
+        "type": "text",
+        "dy": -10,
+        "fontSize": 12,
+        "fontWeight": "bold",
+        "color": "red",
+        "align": "center"
+      },
+      "encoding": {
+        "x": {
+          "field": "lsl_value",
+          "type": "quantitative"
+        },
+        "y": {"value": 0},
+        "text": {"field": "lsl_value", "type": "quantitative", "format": ".3f"}
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "max", "field": "Latest LSL", "as": "lsl_value"}]}
+      ],
+      "mark": {
+        "type": "text",
+        "dy": -25,
+        "fontSize": 11,
+        "fontWeight": "600",
+        "color": "red",
+        "align": "center"
+      },
+      "encoding": {
+        "x": {
+          "field": "lsl_value",
+          "type": "quantitative"
+        },
+        "y": {"value": 0},
+        "text": {"value": "LSL"}
       }
     },
     {
@@ -120,7 +220,54 @@
         "x": {
           "field": "usl_value",
           "type": "quantitative"
-        }
+        },
+        "tooltip": [
+          {"field": "usl_value", "type": "quantitative", "title": "USL", "format": ".4f"}
+        ]
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "max", "field": "Latest USL", "as": "usl_value"}]}
+      ],
+      "mark": {
+        "type": "text",
+        "dy": -10,
+        "fontSize": 12,
+        "fontWeight": "bold",
+        "color": "red",
+        "align": "center"
+      },
+      "encoding": {
+        "x": {
+          "field": "usl_value",
+          "type": "quantitative"
+        },
+        "y": {"value": 0},
+        "text": {"field": "usl_value", "type": "quantitative", "format": ".3f"}
+      }
+    },
+    {
+      "data": {"name": "dataset"},
+      "transform": [
+        {"aggregate": [{"op": "max", "field": "Latest USL", "as": "usl_value"}]}
+      ],
+      "mark": {
+        "type": "text",
+        "dy": -25,
+        "fontSize": 11,
+        "fontWeight": "600",
+        "color": "red",
+        "align": "center"
+      },
+      "encoding": {
+        "x": {
+          "field": "usl_value",
+          "type": "quantitative"
+        },
+        "y": {"value": 0},
+        "text": {"value": "USL"}
       }
     }
   ]
