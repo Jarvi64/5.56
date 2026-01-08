@@ -1,0 +1,138 @@
+{
+  "data": {"name": "dataset"},
+  "spacing": 15,
+  "transform": [
+    {
+      "calculate": "datum.measuredvalue",
+      "as": "val"
+    },
+    {
+      "joinaggregate": [
+        {"op": "mean", "field": "val", "as": "global_mean"},
+        {"op": "min", "field": "lowerlimit", "as": "LSL"},
+        {"op": "max", "field": "upperlimit", "as": "USL"},
+        {"op": "max", "field": "a2", "as": "A2_val"}
+      ]
+    },
+    {
+      "window": [{"op": "count", "as": "total_samples"}]
+    },
+    {
+      "joinaggregate": [
+        {"op": "mean", "field": "val", "as": "lot_mean"},
+        {"op": "min", "field": "val", "as": "lot_min"},
+        {"op": "max", "field": "val", "as": "lot_max"}
+      ],
+      "groupby": ["lot_breaker_id"]
+    },
+    {
+      "calculate": "datum.lot_max - datum.lot_min",
+      "as": "lot_R"
+    },
+    {
+      "joinaggregate": [
+        {"op": "mean", "field": "lot_mean", "as": "grand_x_bar"},
+        {"op": "mean", "field": "lot_R", "as": "r_bar"}
+      ]
+    },
+    {
+      "calculate": "datum.grand_x_bar + (datum.A2_val * datum.r_bar)",
+      "as": "UCL"
+    },
+    {
+      "calculate": "datum.grand_x_bar - (datum.A2_val * datum.r_bar)",
+      "as": "LCL"
+    }
+  ],
+  "vconcat": [
+    {
+      "name": "HEADER_INFO",
+      "width": 600,
+      "height": 50,
+      "layer": [
+        {
+          "mark": {
+            "type": "rect",
+            "cornerRadius": 4,
+            "fill": "#333",
+            "fillOpacity": 0.05
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 10,
+            "fontSize": 14,
+            "fontWeight": "bold"
+          },
+          "encoding": {
+            "text": {"field": "cleanname", "type": "nominal"}
+          }
+        }
+      ]
+    },
+    {
+      "width": 600,
+      "height": 300,
+      "layer": [
+        {
+          "mark": {"type": "bar", "color": "#7bb4eb", "opacity": 0.6},
+          "encoding": {
+            "x": {
+              "field": "val",
+              "type": "quantitative",
+              "bin": {"maxbins": 40},
+              "title": "Measured Value"
+            },
+            "y": {"aggregate": "count", "type": "quantitative", "title": "Sample Count"}
+          }
+        },
+        {
+          "transform": [{"density": "val"}],
+          "mark": {"type": "line", "color": "#1f4e79", "strokeWidth": 2},
+          "encoding": {
+            "x": {"field": "value", "type": "quantitative"},
+            "y": {"field": "density", "type": "quantitative", "axis": null}
+          }
+        },
+        {
+          "mark": {"type": "rule", "color": "#d9534f", "strokeDash": [5, 3], "size": 2},
+          "encoding": {"x": {"field": "LSL", "type": "quantitative"}}
+        },
+        {
+          "mark": {"type": "rule", "color": "#d9534f", "strokeDash": [5, 3], "size": 2},
+          "encoding": {"x": {"field": "USL", "type": "quantitative"}}
+        },
+        {
+          "mark": {"type": "rule", "color": "#5bc0de", "size": 1.5},
+          "encoding": {"x": {"field": "LCL", "type": "quantitative"}}
+        },
+        {
+          "mark": {"type": "rule", "color": "#5bc0de", "size": 1.5},
+          "encoding": {"x": {"field": "UCL", "type": "quantitative"}}
+        },
+        {
+          "mark": {"type": "text", "align": "right", "dx": -5, "dy": 10, "color": "#d9534f", "fontWeight": "bold"},
+          "encoding": {
+            "x": {"field": "LSL", "type": "quantitative"},
+            "y": {"value": 0},
+            "text": {"value": "LSL"}
+          }
+        },
+        {
+          "mark": {"type": "text", "align": "left", "dx": 5, "dy": 10, "color": "#d9534f", "fontWeight": "bold"},
+          "encoding": {
+            "x": {"field": "USL", "type": "quantitative"},
+            "y": {"value": 0},
+            "text": {"value": "USL"}
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "axis": {"grid": false},
+    "view": {"stroke": null}
+  }
+}
