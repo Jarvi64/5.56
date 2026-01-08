@@ -274,10 +274,46 @@
       "data": {"name": "dataset"},
       "transform": [
         {
-          "aggregate": [
-            {"op": "max", "field": "Cp", "as": "cp_value"},
-            {"op": "max", "field": "Cpk", "as": "cpk_value"}
+          "window": [{"op": "lag", "field": "measuredvalue", "as": "prev_value"}],
+          "sort": [{"field": "lot_breaker_id"}]
+        },
+        {
+          "calculate": "abs(datum.measuredvalue - datum.prev_value)",
+          "as": "moving_range"
+        },
+        {
+          "joinaggregate": [
+            {"op": "mean", "field": "moving_range", "as": "rbar"},
+            {"op": "max", "field": "sampleqty", "as": "subgroup_size"},
+            {"op": "max", "field": "Latest LSL", "as": "lsl"},
+            {"op": "max", "field": "Latest USL", "as": "usl"},
+            {"op": "mean", "field": "measuredvalue", "as": "mean"}
           ]
+        },
+        {
+          "calculate": "datum.subgroup_size == 2 ? 1.128 : datum.subgroup_size == 3 ? 1.693 : datum.subgroup_size == 4 ? 2.059 : datum.subgroup_size == 5 ? 2.326 : 1.128",
+          "as": "d2"
+        },
+        {
+          "calculate": "datum.rbar / datum.d2",
+          "as": "sigma_within"
+        },
+        {
+          "aggregate": [
+            {"op": "max", "field": "sigma_within", "as": "sigma"},
+            {"op": "max", "field": "lsl", "as": "lsl"},
+            {"op": "max", "field": "usl", "as": "usl"},
+            {"op": "max", "field": "mean", "as": "mean"},
+            {"op": "count", "as": "n"}
+          ]
+        },
+        {
+          "calculate": "(datum.usl - datum.lsl) / (6 * datum.sigma)",
+          "as": "cp_value"
+        },
+        {
+          "calculate": "min((datum.usl - datum.mean) / (3 * datum.sigma), (datum.mean - datum.lsl) / (3 * datum.sigma))",
+          "as": "cpk_value"
         }
       ],
       "layer": [
