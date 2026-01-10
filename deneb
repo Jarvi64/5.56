@@ -1,0 +1,326 @@
+{
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "Plant Floor Status - Final Refined UI",
+    "title": {
+        "text": "🏭 Plant Floor Status — Current Shift",
+        "fontSize": 20,
+        "fontWeight": "bold",
+        "color": "#1e293b",
+        "anchor": "start",
+        "offset": 20
+    },
+    "background": "#f8fafc",
+    "padding": 20,
+    "data": {
+        "name": "dataset"
+    },
+    "transform": [
+        {
+            "joinaggregate": [
+                {
+                    "op": "min",
+                    "field": "Cpk",
+                    "as": "worst_cpk"
+                },
+                {
+                    "op": "count",
+                    "as": "total_chars"
+                }
+            ],
+            "groupby": [
+                "Line",
+                "wc_name"
+            ]
+        },
+        {
+            "joinaggregate": [
+                {
+                    "op": "min",
+                    "field": "Cpk",
+                    "as": "variant_worst_cpk"
+                }
+            ],
+            "groupby": [
+                "Line",
+                "wc_name",
+                "Varient"
+            ]
+        },
+        {
+            "calculate": "datum.worst_cpk >= 1.67 ? 'ROBUST' : datum.worst_cpk >= 1.33 ? 'CAPABLE' : datum.worst_cpk >= 1.0 ? 'MARGINAL' : 'NOT CAPABLE'",
+            "as": "status_text"
+        },
+        {
+            "calculate": "datum.worst_cpk >= 1.67 ? '#15803d' : datum.worst_cpk >= 1.33 ? '#22c55e' : datum.worst_cpk >= 1.0 ? '#eab308' : '#ef4444'",
+            "as": "status_color"
+        },
+        {
+            "calculate": "datum.worst_cpk >= 1.67 ? '#dcfce7' : datum.worst_cpk >= 1.33 ? '#dcfce7' : datum.worst_cpk >= 1.0 ? '#fef9c3' : '#fee2e2'",
+            "as": "pill_bg_color"
+        },
+        {
+            "calculate": "datum.worst_cpk >= 1.67 ? '#14532d' : datum.worst_cpk >= 1.33 ? '#166534' : datum.worst_cpk >= 1.0 ? '#854d0e' : '#991b1b'",
+            "as": "pill_text_color"
+        },
+        {
+            "calculate": "isValid(datum.worst_cpk) ? datum.pill_bg_color : '#f1f5f9'",
+            "as": "final_pill_bg"
+        },
+        {
+            "calculate": "isValid(datum.worst_cpk) ? datum.pill_text_color : '#64748b'",
+            "as": "final_pill_text"
+        },
+        {
+            "calculate": "isValid(datum.worst_cpk) ? datum.status_text : 'NO DATA'",
+            "as": "final_status_text"
+        },
+        {
+            "calculate": "isValid(datum.worst_cpk) ? datum.status_color : '#94a3b8'",
+            "as": "bar_color"
+        }
+    ],
+    "facet": {
+        "row": {
+            "field": "Line",
+            "type": "nominal",
+            "title": null,
+            "header": {
+                "labelFontSize": 16,
+                "labelFontWeight": "bold",
+                "labelColor": "#64748b",
+                "labelAlign": "left",
+                "labelAngle": 0,
+                "labelPadding": 20
+            }
+        }
+    },
+    "resolve": {
+        "scale": {
+            "x": "independent"
+        }
+    },
+    "spec": {
+        "width": {
+            "step": 190
+        },
+        "height": 100,
+        "layer": [
+            {
+                "mark": {
+                    "type": "rect",
+                    "cornerRadius": 12,
+                    "fill": "white",
+                    "stroke": "#e2e8f0",
+                    "strokeWidth": 1,
+                    "width": 180,
+                    "cursor": "pointer"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "wc_name",
+                        "type": "nominal",
+                        "axis": null,
+                        "sort": {
+                            "field": "wc_name"
+                        }
+                    },
+                    "tooltip": [
+                        {
+                            "field": "wc_name",
+                            "title": "📍 Workcenter"
+                        },
+                        {
+                            "field": "final_status_text",
+                            "title": "Status"
+                        },
+                        {
+                            "field": "worst_cpk",
+                            "title": "Worst Cpk",
+                            "format": ".2f"
+                        },
+                        {
+                            "title": "─────────────",
+                            "field": "wc_name",
+                            "format": ""
+                        },
+                        {
+                            "field": "Varient",
+                            "title": "📦 Variant"
+                        },
+                        {
+                            "field": "variant_worst_cpk",
+                            "title": "   └─ Worst",
+                            "format": ".2f"
+                        },
+                        {
+                            "field": "characteristic_name",
+                            "title": "📏 Characteristic"
+                        },
+                        {
+                            "field": "Cpk",
+                            "title": "   └─ Cpk",
+                            "format": ".2f"
+                        }
+                    ]
+                }
+            },
+            {
+                "mark": {
+                    "type": "rect",
+                    "width": 6,
+                    "cornerRadiusTopLeft": 12,
+                    "cornerRadiusBottomLeft": 12,
+                    "xOffset": -87
+                },
+                "encoding": {
+                    "x": {
+                        "field": "wc_name",
+                        "type": "nominal"
+                    },
+                    "color": {
+                        "field": "bar_color",
+                        "type": "nominal",
+                        "scale": null,
+                        "legend": null
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "left",
+                    "baseline": "top",
+                    "dx": -75,
+                    "dy": -40,
+                    "fontSize": 13,
+                    "fontWeight": "bold",
+                    "color": "#475569"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "wc_name",
+                        "type": "nominal"
+                    },
+                    "text": {
+                        "field": "wc_name"
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "rect",
+                    "cornerRadius": 12,
+                    "height": 24,
+                    "width": 100,
+                    "dx": 35,
+                    "dy": -28
+                },
+                "encoding": {
+                    "x": {
+                        "field": "wc_name",
+                        "type": "nominal"
+                    },
+                    "color": {
+                        "field": "final_pill_bg",
+                        "type": "nominal",
+                        "scale": null
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "center",
+                    "baseline": "middle",
+                    "dx": 35,
+                    "dy": -28,
+                    "fontSize": 9,
+                    "fontWeight": "bold"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "wc_name",
+                        "type": "nominal"
+                    },
+                    "text": {
+                        "field": "final_status_text"
+                    },
+                    "color": {
+                        "field": "final_pill_text",
+                        "type": "nominal",
+                        "scale": null
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "left",
+                    "baseline": "middle",
+                    "dx": -75,
+                    "dy": 10,
+                    "fontSize": 32,
+                    "fontWeight": "bold"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "wc_name",
+                        "type": "nominal"
+                    },
+                    "text": {
+                        "field": "worst_cpk",
+                        "format": ".2f"
+                    },
+                    "color": {
+                        "field": "bar_color",
+                        "type": "nominal",
+                        "scale": null
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "!isValid(datum.worst_cpk)",
+                            "value": 0
+                        },
+                        "value": 1
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "left",
+                    "baseline": "bottom",
+                    "dx": 5,
+                    "dy": 16,
+                    "fontSize": 13,
+                    "fontWeight": "bold",
+                    "color": "#64748b"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "wc_name",
+                        "type": "nominal"
+                    },
+                    "text": {
+                        "condition": {
+                            "test": "!isValid(datum.worst_cpk)",
+                            "value": ""
+                        },
+                        "value": "Cpk"
+                    }
+                }
+            }
+        ]
+    },
+    "config": {
+        "view": {
+            "stroke": null
+        },
+        "facet": {
+            "spacing": 20
+        },
+        "axis": {
+            "grid": false
+        }
+    }
+}
