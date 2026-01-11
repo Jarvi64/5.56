@@ -1,0 +1,472 @@
+{
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "Plant Floor Status - Final Refined UI",
+    "title": {
+        "text": "🏭 Plant Floor Status — Current Shift",
+        "fontSize": 20,
+        "fontWeight": "bold",
+        "color": "#1e293b",
+        "anchor": "start",
+        "offset": 20
+    },
+    "background": "#f8fafc",
+    "padding": 20,
+    "data": {
+        "name": "dataset"
+    },
+    "transform": [
+        {
+            "calculate": "isValid(datum.Cpk) ? (datum.Cpk >= 1.33 ? 1 : 0) : 0",
+            "as": "is_green"
+        },
+        {
+            "calculate": "isValid(datum.Cpk) ? (datum.Cpk >= 1.0 && datum.Cpk < 1.33 ? 1 : 0) : 0",
+            "as": "is_yellow"
+        },
+        {
+            "calculate": "isValid(datum.Cpk) ? (datum.Cpk < 1.0 ? 1 : 0) : 0",
+            "as": "is_red"
+        },
+        {
+            "joinaggregate": [
+                {
+                    "op": "min",
+                    "field": "Cpk",
+                    "as": "worst_cpk"
+                },
+                {
+                    "op": "sum",
+                    "field": "is_green",
+                    "as": "count_green"
+                },
+                {
+                    "op": "sum",
+                    "field": "is_yellow",
+                    "as": "count_yellow"
+                },
+                {
+                    "op": "sum",
+                    "field": "is_red",
+                    "as": "count_red"
+                },
+                {
+                    "op": "count",
+                    "as": "total_chars"
+                }
+            ],
+            "groupby": [
+                "Line",
+                "wc_name"
+            ]
+        },
+        {
+            "filter": "!isValid(datum.worst_cpk) || datum.Cpk == datum.worst_cpk"
+        },
+        {
+            "window": [
+                {
+                    "op": "dense_rank",
+                    "as": "rank"
+                }
+            ],
+            "groupby": [
+                "Line"
+            ],
+            "sort": [
+                {
+                    "field": "wc_name"
+                }
+            ]
+        },
+        {
+            "window": [
+                {
+                    "op": "row_number",
+                    "as": "dedup_rank"
+                }
+            ],
+            "groupby": [
+                "Line",
+                "wc_name"
+            ],
+            "sort": [
+                {
+                    "field": "Cpk",
+                    "order": "ascending"
+                }
+            ]
+        },
+        {
+            "filter": "datum.dedup_rank == 1"
+        },
+        {
+            "calculate": "(datum.rank - 1) % 5",
+            "as": "col_index"
+        },
+        {
+            "calculate": "floor((datum.rank - 1) / 5)",
+            "as": "row_index"
+        },
+        {
+            "calculate": "datum.worst_cpk >= 1.67 ? 'ROBUST' : datum.worst_cpk >= 1.33 ? 'CAPABLE' : datum.worst_cpk >= 1.0 ? 'MARGINAL' : 'NOT CAPABLE'",
+            "as": "status_text"
+        },
+        {
+            "calculate": "datum.worst_cpk >= 1.67 ? '#15803d' : datum.worst_cpk >= 1.33 ? '#22c55e' : datum.worst_cpk >= 1.0 ? '#eab308' : '#ef4444'",
+            "as": "status_color"
+        },
+        {
+            "calculate": "datum.worst_cpk >= 1.67 ? '#dcfce7' : datum.worst_cpk >= 1.33 ? '#dcfce7' : datum.worst_cpk >= 1.0 ? '#fef9c3' : '#fee2e2'",
+            "as": "pill_bg_color"
+        },
+        {
+            "calculate": "datum.worst_cpk >= 1.67 ? '#14532d' : datum.worst_cpk >= 1.33 ? '#166534' : datum.worst_cpk >= 1.0 ? '#854d0e' : '#991b1b'",
+            "as": "pill_text_color"
+        },
+        {
+            "calculate": "isValid(datum.worst_cpk) ? datum.pill_bg_color : '#f1f5f9'",
+            "as": "final_pill_bg"
+        },
+        {
+            "calculate": "isValid(datum.worst_cpk) ? datum.pill_text_color : '#64748b'",
+            "as": "final_pill_text"
+        },
+        {
+            "calculate": "isValid(datum.worst_cpk) ? datum.status_text : 'NO DATA'",
+            "as": "final_status_text"
+        },
+        {
+            "calculate": "isValid(datum.worst_cpk) ? datum.status_color : '#94a3b8'",
+            "as": "bar_color"
+        },
+        {
+            "calculate": "length(datum.wc_name) > 10 ? substring(datum.wc_name, 0, 9) + '...' : datum.wc_name",
+            "as": "wc_name_truncated"
+        }
+    ],
+    "facet": {
+        "row": {
+            "field": "Line",
+            "type": "nominal",
+            "title": null,
+            "header": {
+                "labelFontSize": 16,
+                "labelFontWeight": "bold",
+                "labelColor": "#64748b",
+                "labelAlign": "left",
+                "labelAngle": 0,
+                "labelPadding": 20
+            }
+        }
+    },
+    "resolve": {
+        "scale": {
+            "y": "independent"
+        }
+    },
+    "spec": {
+        "width": {
+            "step": 190
+        },
+        "height": {
+            "step": 120
+        },
+        "layer": [
+            {
+                "mark": {
+                    "type": "rect",
+                    "cornerRadius": 12,
+                    "fill": "white",
+                    "stroke": "#e2e8f0",
+                    "strokeWidth": 1,
+                    "width": 180,
+                    "height": 100,
+                    "cursor": "pointer"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal",
+                        "axis": null,
+                        "scale": {
+                            "step": 190
+                        }
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal",
+                        "axis": null,
+                        "scale": {
+                            "step": 120
+                        }
+                    },
+                    "tooltip": null
+                }
+            },
+            {
+                "mark": {
+                    "type": "image",
+                    "width": 178,
+                    "height": 98,
+                    "cornerRadius": 12,
+                    "opacity": 0.5,
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20width%3D%22180%22%20height%3D%22100%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cdefs%3E%3Cpattern%20id%3D%22p%22%20width%3D%2210%22%20height%3D%2210%22%20patternUnits%3D%22userSpaceOnUse%22%3E%3Cpath%20d%3D%22M-2%2C2%20l4%2C-4%20M0%2C10%20l10%2C-10%20M8%2C12%20l4%2C-4%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%221.5%22%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22url(%23p)%22%2F%3E%3C%2Fsvg%3E"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "!isValid(datum.worst_cpk)",
+                            "value": 1
+                        },
+                        "value": 0
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "rect",
+                    "width": 6,
+                    "height": 100,
+                    "cornerRadiusTopLeft": 12,
+                    "cornerRadiusBottomLeft": 12,
+                    "xOffset": -87
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "color": {
+                        "field": "bar_color",
+                        "type": "nominal",
+                        "scale": null,
+                        "legend": null
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "left",
+                    "baseline": "top",
+                    "dx": -75,
+                    "dy": -38,
+                    "fontSize": 13,
+                    "fontWeight": "bold",
+                    "color": "#475569"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "text": {
+                        "field": "wc_name_truncated"
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "rect",
+                    "cornerRadius": 100,
+                    "height": 20,
+                    "width": 80,
+                    "xOffset": 50,
+                    "yOffset": -35
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "color": {
+                        "field": "final_pill_bg",
+                        "type": "nominal",
+                        "scale": null
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "center",
+                    "baseline": "middle",
+                    "dx": 50,
+                    "dy": -34,
+                    "fontSize": 9,
+                    "fontWeight": "bold"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "text": {
+                        "field": "final_status_text"
+                    },
+                    "color": {
+                        "field": "final_pill_text",
+                        "type": "nominal",
+                        "scale": null
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "left",
+                    "baseline": "middle",
+                    "dx": -75,
+                    "dy": 15,
+                    "fontSize": 32,
+                    "fontWeight": "bold"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "text": {
+                        "field": "worst_cpk",
+                        "format": ".2f"
+                    },
+                    "color": {
+                        "field": "bar_color",
+                        "type": "nominal",
+                        "scale": null
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "!isValid(datum.worst_cpk)",
+                            "value": 0
+                        },
+                        "value": 1
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "left",
+                    "baseline": "bottom",
+                    "dx": 5,
+                    "dy": 21,
+                    "fontSize": 13,
+                    "fontWeight": "bold",
+                    "color": "#64748b"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "text": {
+                        "condition": {
+                            "test": "!isValid(datum.worst_cpk)",
+                            "value": ""
+                        },
+                        "value": "Cpk"
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "rect",
+                    "fillOpacity": 0,
+                    "strokeWidth": 0,
+                    "width": 180,
+                    "height": 100,
+                    "cursor": "pointer"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "tooltip": [
+                        {
+                            "field": "wc_name",
+                            "title": "📍 Workcenter"
+                        },
+                        {
+                            "field": "final_status_text",
+                            "title": "Status"
+                        },
+                        {
+                            "field": "parameter_summary_dax",
+                            "title": "📝 Parameters"
+                        },
+                        {
+                            "title": "──────────────",
+                            "field": "wc_name",
+                            "format": ""
+                        },
+                        {
+                            "field": "count_red",
+                            "title": "🔴 Not Capable (Qty)"
+                        },
+                        {
+                            "field": "count_yellow",
+                            "title": "🟡 Marginal (Qty)"
+                        },
+                        {
+                            "field": "count_green",
+                            "title": "🟢 Capable (Qty)"
+                        },
+                        {
+                            "field": "total_chars",
+                            "title": "Total Params"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "config": {
+        "view": {
+            "stroke": null
+        },
+        "facet": {
+            "spacing": 20
+        },
+        "axis": {
+            "grid": false
+        }
+    }
+}
