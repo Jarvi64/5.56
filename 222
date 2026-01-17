@@ -4,12 +4,6 @@
     "data": {
         "name": "dataset"
     },
-    "params": [
-        {
-            "name": "shift_progress",
-            "expr": "clamp((now() - datetime(year(now()), month(now()), date(now()), 8, 0, 0)) / (datetime(year(now()), month(now()), date(now()), 20, 0, 0) - datetime(year(now()), month(now()), date(now()), 8, 0, 0)), 0.01, 1)"
-        }
-    ],
     "title": {
         "text": "🏭 Production Floor Status",
         "fontSize": 20,
@@ -49,6 +43,26 @@
                     "as": "Total_DT"
                 },
                 {
+                    "op": "distinct",
+                    "field": "Varient",
+                    "as": "Variant_Count"
+                },
+                {
+                    "op": "min",
+                    "field": "Varient",
+                    "as": "First_Variant"
+                },
+                {
+                    "op": "min",
+                    "field": "line_sort_order",
+                    "as": "line_sort_order"
+                },
+                {
+                    "op": "min",
+                    "field": "wc_sort_order",
+                    "as": "wc_sort_order"
+                },
+                {
                     "op": "mean",
                     "field": "OEE",
                     "as": "Avg_OEE"
@@ -83,7 +97,8 @@
             ],
             "sort": [
                 {
-                    "field": "Line"
+                    "field": "line_sort_order",
+                    "order": "ascending"
                 }
             ]
         },
@@ -99,7 +114,8 @@
             ],
             "sort": [
                 {
-                    "field": "wc_name"
+                    "field": "wc_sort_order",
+                    "order": "ascending"
                 }
             ]
         },
@@ -140,7 +156,7 @@
             "as": "Target_Label"
         },
         {
-            "calculate": "datum.Total_DT > 0 ? '⏱ ' + datum.Total_DT + 'm' : ''",
+            "calculate": "datum.Total_DT > 0 ? (datum.Total_DT > 60 ? '⏱ ' + format(datum.Total_DT / 60, '.1f') + 'h' : '⏱ ' + datum.Total_DT + 'm') : ''",
             "as": "Downtime_Label"
         },
         {
@@ -148,7 +164,7 @@
             "as": "OEE_Label"
         },
         {
-            "calculate": "max(0, datum.Total_Target - datum.Total_Produced)",
+            "calculate": "isValid(datum.Total_Target) && isValid(datum.Total_Produced) ? max(0, datum.Total_Target - datum.Total_Produced) : 0",
             "as": "Remaining_Qty"
         },
         {
@@ -156,8 +172,24 @@
             "as": "Remaining_Pct"
         },
         {
-            "calculate": "datum.Remaining_Qty > 0 ? format(datum.Remaining_Qty, ',d') + ' (' + format(datum.Remaining_Pct, '.0%') + ') Remaining' : 'Target Achieved'",
+            "calculate": "datum.Total_Target > 0 && isValid(datum.Total_Produced) ? abs(datum.Total_Produced - datum.Total_Target) / datum.Total_Target : 0",
+            "as": "Variance_Pct"
+        },
+        {
+            "calculate": "abs(datum.Total_Produced - datum.Total_Target) >= 1000000 ? format(abs(datum.Total_Produced - datum.Total_Target)/1000000, '.1f') + 'M' : (abs(datum.Total_Produced - datum.Total_Target) >= 1000 ? format(abs(datum.Total_Produced - datum.Total_Target)/1000, '.1f') + 'K' : abs(datum.Total_Produced - datum.Total_Target))",
+            "as": "Variance_Formatted"
+        },
+        {
+            "calculate": "!isValid(datum.Total_Target) || !isValid(datum.Total_Produced) ? '' : (datum.Total_Target == 0 && datum.Total_Produced == 0 ? '' : (datum.Total_Produced >= datum.Total_Target ? ('✓ ' + (datum.Total_Produced > datum.Total_Target ? 'Ahead by ' + datum.Variance_Formatted + ' (' + format(datum.Variance_Pct, '.0%') + ')' : 'On Target')) : ('⚠ Behind by ' + datum.Variance_Formatted + ' (' + format(datum.Variance_Pct, '.0%') + ')')))",
             "as": "Remaining_Label"
+        },
+        {
+            "calculate": "!isValid(datum.Total_Target) || !isValid(datum.Total_Produced) || (datum.Total_Target == 0 && datum.Total_Produced == 0) ? '#94a3b8' : (datum.Total_Produced >= datum.Total_Target ? '#22c55e' : '#ef4444')",
+            "as": "Remaining_Color"
+        },
+        {
+            "calculate": "datum.Variant_Count > 1 ? datum.First_Variant + ' +' + (datum.Variant_Count - 1) : (isValid(datum.First_Variant) ? datum.First_Variant : '')",
+            "as": "Variant_Label"
         }
     ],
     "facet": {
@@ -165,6 +197,10 @@
             "field": "Line",
             "type": "nominal",
             "title": null,
+            "sort": {
+                "field": "line_sort_order",
+                "order": "ascending"
+            },
             "header": {
                 "labels": false,
                 "title": null
@@ -247,6 +283,60 @@
             },
             {
                 "mark": {
+                    "type": "image",
+                    "width": 218,
+                    "height": 128,
+                    "cornerRadius": 12,
+                    "opacity": 1,
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20width%3D%22180%22%20height%3D%22100%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cdefs%3E%3Cpattern%20id%3D%22p_red%22%20width%3D%2210%22%20height%3D%2210%22%20patternUnits%3D%22userSpaceOnUse%22%3E%3Cpath%20d%3D%22M-2%2C2%20l4%2C-4%20M0%2C10%20l10%2C-10%20M8%2C12%20l4%2C-4%22%20stroke%3D%22%23ef4444%22%20stroke-width%3D%221.5%22%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22url(%23p_red)%22%3E%3Canimate%20attributeName%3D%22opacity%22%20values%3D%220.1%3B0.6%3B0.1%22%20dur%3D%221.5s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2Frect%3E%3C%2Fsvg%3E"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "datum.Any_Down",
+                            "value": 1
+                        },
+                        "value": 0
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "image",
+                    "width": 218,
+                    "height": 128,
+                    "cornerRadius": 12,
+                    "opacity": 0.5,
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20width%3D%22180%22%20height%3D%22100%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cdefs%3E%3Cpattern%20id%3D%22p_gray%22%20width%3D%2210%22%20height%3D%2210%22%20patternUnits%3D%22userSpaceOnUse%22%3E%3Cpath%20d%3D%22M-2%2C2%20l4%2C-4%20M0%2C10%20l10%2C-10%20M8%2C12%20l4%2C-4%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%221.5%22%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22url(%23p_gray)%22%2F%3E%3C%2Fsvg%3E"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "!isValid(datum.Total_Produced) && !datum.Any_Down",
+                            "value": 0.4
+                        },
+                        "value": 0
+                    }
+                }
+            },
+            {
+                "mark": {
                     "type": "rect",
                     "width": 6,
                     "height": 130,
@@ -291,6 +381,39 @@
                     },
                     "text": {
                         "field": "wc_name"
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "left",
+                    "baseline": "top",
+                    "dx": -95,
+                    "dy": -36,
+                    "fontSize": 10,
+                    "fontWeight": "normal",
+                    "color": "#94a3b8",
+                    "fontStyle": "italic"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "text": {
+                        "field": "Variant_Label"
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "datum.Variant_Label != ''",
+                            "value": 1
+                        },
+                        "value": 0
                     }
                 }
             },
@@ -371,6 +494,13 @@
                     "color": {
                         "field": "Status_Color",
                         "scale": null
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "!isValid(datum.Total_Produced)",
+                            "value": 0
+                        },
+                        "value": 1
                     }
                 }
             },
@@ -396,6 +526,13 @@
                     },
                     "text": {
                         "field": "OEE_Label"
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "!isValid(datum.Total_Produced)",
+                            "value": 0
+                        },
+                        "value": 1
                     }
                 }
             },
@@ -407,31 +544,6 @@
                     "dx": 105,
                     "dy": 13,
                     "fontSize": 12,
-                    "color": "#94a3b8"
-                },
-                "encoding": {
-                    "x": {
-                        "field": "col_index",
-                        "type": "ordinal"
-                    },
-                    "y": {
-                        "field": "row_index",
-                        "type": "ordinal"
-                    },
-                    "text": {
-                        "field": "Target_Label"
-                    }
-                }
-            },
-            {
-                "mark": {
-                    "type": "text",
-                    "align": "right",
-                    "baseline": "bottom",
-                    "dx": 105,
-                    "dy": 33,
-                    "fontSize": 9,
-                    "fontWeight": "bold",
                     "color": "#64748b"
                 },
                 "encoding": {
@@ -444,7 +556,49 @@
                         "type": "ordinal"
                     },
                     "text": {
+                        "field": "Target_Label"
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "!isValid(datum.Total_Target)",
+                            "value": 0
+                        },
+                        "value": 1
+                    }
+                }
+            },
+            {
+                "mark": {
+                    "type": "text",
+                    "align": "right",
+                    "baseline": "bottom",
+                    "dx": 105,
+                    "dy": 33,
+                    "fontSize": 9,
+                    "fontWeight": "bold"
+                },
+                "encoding": {
+                    "x": {
+                        "field": "col_index",
+                        "type": "ordinal"
+                    },
+                    "y": {
+                        "field": "row_index",
+                        "type": "ordinal"
+                    },
+                    "text": {
                         "field": "Remaining_Label"
+                    },
+                    "color": {
+                        "field": "Remaining_Color",
+                        "scale": null
+                    },
+                    "opacity": {
+                        "condition": {
+                            "test": "datum.Remaining_Label != ''",
+                            "value": 1
+                        },
+                        "value": 0
                     }
                 }
             },
