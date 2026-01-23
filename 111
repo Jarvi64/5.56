@@ -14,399 +14,206 @@
       "dataPointLimit": 50
     },
     "information": {
-      "name": "SPC Rainclouds with Control Limits",
-      "description": "Raincloud plot with UCL/LCL and USL/LSL support",
-      "author": "Modified for SPC"
+      "name": "Rainclouds Labelled - Dynamic",
+      "description": "Raincloud plot with dynamic scaling and responsive width.",
+      "author": "Kerry Kolosko (Updated)",
+      "uuid": "12d6be82-312e-4ec1-8c07-a2f9a16fcf5a",
+      "generated": "2022-04-10T09:18:51.433Z"
     },
     "dataset": [
       {
         "key": "__0__",
         "name": "Category",
-        "description": "Parameter/Category name",
+        "description": "",
         "type": "text",
         "kind": "column"
       },
       {
         "key": "__1__",
-        "name": "MeasuredValue",
-        "description": "Measured value",
+        "name": "Index",
+        "description": "",
         "type": "numeric",
-        "kind": "measure"
-      },
-      {
-        "key": "__2__",
-        "name": "UniqueID",
-        "description": "Unique identifier",
-        "type": "text",
         "kind": "column"
       },
       {
+        "key": "__2__",
+        "name": "Measure",
+        "description": "",
+        "type": "numeric",
+        "kind": "measure"
+      },
+      {
         "key": "__3__",
-        "name": "UCL",
-        "description": "Upper Control Limit (optional)",
-        "type": "numeric",
-        "kind": "measure"
-      },
-      {
-        "key": "__4__",
-        "name": "LCL",
-        "description": "Lower Control Limit (optional)",
-        "type": "numeric",
-        "kind": "measure"
-      },
-      {
-        "key": "__5__",
-        "name": "USL",
-        "description": "Upper Spec Limit (optional)",
-        "type": "numeric",
-        "kind": "measure"
-      },
-      {
-        "key": "__6__",
-        "name": "LSL",
-        "description": "Lower Spec Limit (optional)",
-        "type": "numeric",
+        "name": "Count",
+        "description": "",
+        "type": "text",
         "kind": "measure"
       }
     ]
   },
   "config": {
-    "padding": 5,
+    "padding": 0,
     "view": {"stroke": "transparent"},
-    "facet": {"spacing": 5},
+    "facet": {"spacing": 2},
     "header": {
-      "labelFontSize": 12,
-      "labelColor": "#605E5C",
-      "labelPadding": 5
+      "title": null,
+      "labelColor": "white"
     },
     "font": "Segoe UI",
     "area": {
-      "interpolate": "monotone",
-      "opacity": 0.5
+      "color": "#eaeaea",
+      "interpolate": "cardinal",
+      "stroke": "white"
     },
     "point": {
-      "size": 25,
-      "opacity": 0.6,
+      "size": 10,
+      "opacity": 0.5,
+      "color": "#eaeaea",
+      "stroke": "white",
+      "strokeWidth": 0.25,
       "filled": true
     },
     "axis": {
       "domain": false,
-      "grid": true,
-      "gridColor": "#f0f0f0",
-      "labelFontSize": 10,
+      "grid": false,
+      "labelFontSize": 12,
       "ticks": false,
-      "titleFontSize": 11,
+      "tickCount": 5,
+      "titleFontSize": 12,
       "titleFontWeight": 400,
-      "titleColor": "#605E5C"
+      "titleColor": "#605E5C",
+      "offset": 10
     },
     "boxplot": {
-      "size": 12,
+      "size": 10,
       "outliers": false,
       "box": {
-        "strokeWidth": 1.5
+        "color": "#eaeaea",
+        "stroke": "white",
+        "strokeWidth": 1
       },
-      "rule": {
-        "strokeWidth": 1.5
-      },
-      "median": {
-        "color": "black",
-        "strokeWidth": 2
-      }
+      "rule": {"stroke": "black"},
+      "median": {"color": "white"}
     },
-    "axisY": {"disable": true}
+    "axisY": {"disable": true},
+    "legend": {"title": null}
   },
   "data": {"name": "dataset"},
   "bounds": "flush",
+  "spacing": 15,
   "autosize": {
     "type": "fit",
     "contains": "padding"
   },
   "vconcat": [
     {
-      "height": 100,
+      "height": 65,
+      "width": "container",
       "mark": {
         "type": "area",
-        "orient": "vertical"
+        "opacity": 0.7
       },
       "transform": [
         {
-          "density": "__1__",
-          "groupby": ["__0__"]
+          "density": "__2__",
+          "groupby": ["__0__"],
+          "bandwidth": 0
         }
       ],
       "encoding": {
         "x": {
           "field": "value",
           "type": "quantitative",
-          "scale": {"nice": true, "zero": false},
-          "axis": {
-            "title": "",
-            "labelAngle": 0
-          }
+          "axis": false,
+          "title": ""
         },
         "y": {
           "field": "density",
           "type": "quantitative",
-          "stack": "zero",
-          "axis": null
+          "stack": false
         },
         "color": {
           "field": "__0__",
-          "type": "nominal",
-          "legend": {"orient": "top", "titleFontSize": 11, "labelFontSize": 10}
-        },
-        "tooltip": [
-          {"field": "__0__", "type": "nominal", "title": "Category"},
-          {"field": "value", "type": "quantitative", "title": "Value", "format": ".4f"}
-        ]
+          "type": "nominal"
+        }
       }
     },
     {
       "facet": {
-        "row": {
-          "field": "__0__",
-          "type": "nominal",
-          "header": {
-            "labelAngle": 0,
-            "labelAlign": "left",
-            "labelFontSize": 10
-          }
-        }
+        "row": {"field": "__0__"}
       },
+      "transform": [
+        {
+          "calculate": "random()",
+          "as": "Jitter"
+        }
+      ],
       "spec": {
-        "height": 60,
+        "height": 20,
+        "width": "container",
         "layer": [
+          {"mark": {"type": "boxplot"}},
           {
-            "transform": [
-              {"filter": "datum.__3__ != null"},
-              {
-                "aggregate": [{"op": "max", "field": "__3__", "as": "ucl_value"}],
-                "groupby": ["__0__"]
-              }
-            ],
-            "layer": [
-              {
-                "mark": {
-                  "type": "rule",
-                  "strokeWidth": 2,
-                  "strokeDash": [8, 4],
-                  "color": "#e74c3c"
-                },
-                "encoding": {
-                  "x": {
-                    "field": "ucl_value",
-                    "type": "quantitative"
-                  }
-                }
-              },
-              {
-                "mark": {
-                  "type": "text",
-                  "align": "left",
-                  "dx": 5,
-                  "dy": -20,
-                  "fontSize": 9,
-                  "color": "#e74c3c",
-                  "fontWeight": "bold"
-                },
-                "encoding": {
-                  "x": {
-                    "field": "ucl_value",
-                    "type": "quantitative"
-                  },
-                  "text": {"value": "UCL"}
-                }
-              }
-            ]
-          },
-          {
-            "transform": [
-              {"filter": "datum.__4__ != null"},
-              {
-                "aggregate": [{"op": "max", "field": "__4__", "as": "lcl_value"}],
-                "groupby": ["__0__"]
-              }
-            ],
-            "layer": [
-              {
-                "mark": {
-                  "type": "rule",
-                  "strokeWidth": 2,
-                  "strokeDash": [8, 4],
-                  "color": "#e74c3c"
-                },
-                "encoding": {
-                  "x": {
-                    "field": "lcl_value",
-                    "type": "quantitative"
-                  }
-                }
-              },
-              {
-                "mark": {
-                  "type": "text",
-                  "align": "left",
-                  "dx": 5,
-                  "dy": 20,
-                  "fontSize": 9,
-                  "color": "#e74c3c",
-                  "fontWeight": "bold"
-                },
-                "encoding": {
-                  "x": {
-                    "field": "lcl_value",
-                    "type": "quantitative"
-                  },
-                  "text": {"value": "LCL"}
-                }
-              }
-            ]
-          },
-          {
-            "transform": [
-              {"filter": "datum.__5__ != null"},
-              {
-                "aggregate": [{"op": "max", "field": "__5__", "as": "usl_value"}],
-                "groupby": ["__0__"]
-              }
-            ],
-            "layer": [
-              {
-                "mark": {
-                  "type": "rule",
-                  "strokeWidth": 2,
-                  "strokeDash": [2, 2],
-                  "color": "#9b59b6"
-                },
-                "encoding": {
-                  "x": {
-                    "field": "usl_value",
-                    "type": "quantitative"
-                  }
-                }
-              },
-              {
-                "mark": {
-                  "type": "text",
-                  "align": "right",
-                  "dx": -5,
-                  "dy": -20,
-                  "fontSize": 9,
-                  "color": "#9b59b6",
-                  "fontWeight": "bold"
-                },
-                "encoding": {
-                  "x": {
-                    "field": "usl_value",
-                    "type": "quantitative"
-                  },
-                  "text": {"value": "USL"}
-                }
-              }
-            ]
-          },
-          {
-            "transform": [
-              {"filter": "datum.__6__ != null"},
-              {
-                "aggregate": [{"op": "max", "field": "__6__", "as": "lsl_value"}],
-                "groupby": ["__0__"]
-              }
-            ],
-            "layer": [
-              {
-                "mark": {
-                  "type": "rule",
-                  "strokeWidth": 2,
-                  "strokeDash": [2, 2],
-                  "color": "#9b59b6"
-                },
-                "encoding": {
-                  "x": {
-                    "field": "lsl_value",
-                    "type": "quantitative"
-                  }
-                }
-              },
-              {
-                "mark": {
-                  "type": "text",
-                  "align": "right",
-                  "dx": -5,
-                  "dy": 20,
-                  "fontSize": 9,
-                  "color": "#9b59b6",
-                  "fontWeight": "bold"
-                },
-                "encoding": {
-                  "x": {
-                    "field": "lsl_value",
-                    "type": "quantitative"
-                  },
-                  "text": {"value": "LSL"}
-                }
-              }
-            ]
-          },
-          {
-            "mark": {"type": "boxplot", "extent": 1.5},
-            "encoding": {
-              "color": {
-                "field": "__0__",
-                "type": "nominal",
-                "legend": null
-              }
-            }
-          },
-          {
-            "transform": [
-              {
-                "calculate": "random() * 0.3 + 0.55",
-                "as": "Jitter"
-              }
-            ],
             "mark": {
               "type": "point",
-              "tooltip": true,
-              "strokeWidth": 0.5,
-              "stroke": "white"
+              "tooltip": true
             },
             "encoding": {
               "y": {
                 "field": "Jitter",
                 "type": "quantitative",
-                "scale": {"domain": [0, 1]},
+                "scale": {
+                  "range": [35, 15]
+                },
                 "axis": null
+              }
+            }
+          },
+          {
+            "mark": {
+              "type": "text",
+              "dx": 5,
+              "dy": -10,
+              "color": "black",
+              "align": "left",
+              "baseline": "bottom",
+              "font": "sans-serif",
+              "fontSize": 12,
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+              "limit": 0
+            },
+            "encoding": {
+              "x": {
+                "value": 0
               },
-              "color": {
-                "field": "__0__",
-                "type": "nominal",
-                "legend": null
-              },
-              "tooltip": [
-                {"field": "__0__", "type": "nominal", "title": "Category"},
-                {"field": "__1__", "type": "quantitative", "title": "Value", "format": ".4f"},
-                {"field": "__2__", "type": "nominal", "title": "ID"}
-              ]
+              "text": {"field": "__3__"}
             }
           }
         ],
         "encoding": {
           "x": {
-            "field": "__1__",
+            "field": "__2__",
             "type": "quantitative",
-            "axis": {"title": "Measured Value", "labelAngle": 0},
-            "scale": {
-              "nice": true,
-              "zero": false
-            }
+            "axis": {"title": ""}
+          },
+          "color": {
+            "field": "__0__",
+            "type": "nominal"
           }
         }
       },
       "resolve": {
         "scale": {
-          "x": "shared",
           "y": "independent"
         }
       }
     }
+  ],
+  "resolve": {
+    "scale": {
+      "x": "shared"
+    }
+  }
+}
+
